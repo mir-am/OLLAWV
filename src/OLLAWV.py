@@ -10,6 +10,7 @@ License: GNU General Public License v3.0
 from dataproc import read_data
 from sklearn.metrics import accuracy_score
 from sklearn.model_selection import train_test_split, KFold
+from itertools import product
 import numpy as np
 import time
 
@@ -136,7 +137,7 @@ class OLLAWV:
         # Indexes
         non_sv_idx = list(range(0, self.X_train.shape[0])) 
 
-        while (yo < M): #and len(non_sv_idx) > 1:
+        while (yo < M):
 
             t = t + 1
             learn_rate = 2 / np.sqrt(t)
@@ -177,7 +178,7 @@ class OLLAWV:
                 
                 break
 
-            #print(yo)
+            print(yo)
     
     def predict(self, X_test):
 
@@ -249,14 +250,55 @@ def cv_svm_nl(data_train, data_labels, k, c, rbf_u):
         
     # m_a=0, m_r_p=1, m_p_p=2, m_f1_p=3, k=4, c=5, w=6, b=7 m_r_n=8, m_p_n=9, m_f1_n=10, 
     # tp=11, tn=12, fp=13, fn=14, rbf=15 iter=16    
-    return np.mean(mean_accuracy)
-        
-        
-# Test
-c = 4 ** -1
-y = 4 ** 1
+    return np.mean(mean_accuracy), np.std(mean_accuracy)
 
-train_data, lables, filename = read_data('../dataset/checkerboard.csv')
+
+def grid_search(data_train, data_labels, c_l_bound, c_u_bound, rbf_lbound, \
+                rbf_ubound):
+    
+    
+    c_range = [4 ** i for i in np.arange(c_l_bound, c_u_bound + 1, 1, \
+                                         dtype=np.float)]
+    
+    search_space = list(product(*[c_range, [4 ** i for i in np.arange(rbf_lbound, \
+                rbf_ubound + 1, 1, dtype=np.float)]]))
+    
+    # Store 
+    result_list = []
+    
+    # Max accuracy
+    max_acc, max_acc_std = 0, 0
+
+    # Total number of search elements
+    search_total = len(search_space)
+    
+    run = 0
+    
+    # Ehaustive Grid search for finding best C1 & C2   
+    for element in search_space:
+        
+        acc, acc_std = cv_svm_nl(data_train, lables, 5, element[0], element[1])
+        
+        result_list.append([acc, acc_std, element[0], element[1]])
+        
+        # Save best accuracy
+        if acc > max_acc:
+                
+            max_acc = acc
+            max_acc_std = acc_std 
+                
+        run += 1
+        
+        print("SVM|%d:%d|Acc:%.2f+-%.2f|B-Acc:%.2f+-%.2f|C:%.2f, y:%.2f" %
+              (run, search_total, acc, acc_std, max_acc, max_acc_std,  \
+               element[0], element[1]))
+      
+      
+# Test
+c = 4 ** 2
+y = 4 ** -2
+
+train_data, lables, filename = read_data('../dataset/votes.csv')
 X_t, X_te, y_tr, y_te = train_test_split(train_data, lables, test_size=0.2,\
                                                     random_state=42)
 
@@ -266,12 +308,14 @@ svm_1 = OLLAWV(c, y)
 svm_1.fit(X_t, y_tr)
 result = svm_1.predict(X_te)
 
-cv_test = cv_svm_nl(train_data, lables, 5, c, y)
+#cv_test = cv_svm_nl(train_data, lables, 5, c, y)
 
 a = svm_1.alpha
 b = svm_1.bias
 
 print("Finished in %.2f sec" % ((time.time() - start_t)))
-print("CV acc: %.2f " % cv_test)
+#print("CV acc: %.2f " % cv_test)
 print('percent of support vectors: %.2f' % ((np.count_nonzero(a) / a.shape[0])*100))
 print("Accuracy: %.2f" % (accuracy_score(y_te, result) * 100))
+
+#grid_search(train_data, lables, -2, 5, -5, 2)
