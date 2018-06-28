@@ -32,7 +32,11 @@
 			<Add option="-Wall" />
 			<Add option="-fexceptions" />
 		</Compiler>
+		<Unit filename="FileReader.cpp" />
+		<Unit filename="FileReader.h" />
 		<Unit filename="main.cpp" />
+		<Unit filename="svm.cpp" />
+		<Unit filename="svm.h" />
 		<Unit filename="timer.cc" />
 		<Unit filename="timer.h" />
 		<Extensions>

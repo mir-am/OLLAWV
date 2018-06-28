@@ -25,7 +25,7 @@
 
 1530187243 e:\archive\amir_archive\amir-personal\projects\svm\svm.h
 
-1530195848 source:e:\archive\amir_archive\amir-personal\projects\ollawv\codeblocks-project\main.cpp
+1530198790 source:e:\archive\amir_archive\amir-personal\projects\ollawv\codeblocks-project\main.cpp
 	<iostream>
 	<vector>
 	<algorithm>
@@ -36,4 +36,22 @@
 
 1530129481 source:e:\archive\amir_archive\amir-personal\projects\ollawv\codeblocks-project\timer.cc
 	"timer.h"
+
+1530197810 source:e:\archive\amir_archive\amir-personal\projects\ollawv\codeblocks-project\filereader.cpp
+	"FILEReader.h"
+	<iostream>
+	<sstream>
+	<fstream>
+	<string>
+	<vector>
+	<stdlib.h>
+
+1530197790 e:\archive\amir_archive\amir-personal\projects\ollawv\codeblocks-project\filereader.h
+	<string>
+	<vector>
+
+1530198926 source:e:\archive\amir_archive\amir-personal\projects\ollawv\codeblocks-project\svm.cpp
+	"svm.h"
+
+1530199714 e:\archive\amir_archive\amir-personal\projects\ollawv\codeblocks-project\svm.h
 

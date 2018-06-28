@@ -1,6 +1,7 @@
 #include <iostream>
 #include <vector>
 #include <algorithm>
+#include "svm.h"
 #include "timer.h"
 
 using namespace std;
@@ -18,6 +19,8 @@ static inline double powi(double base, int times)
 	return ret;
 }
 
+void parseCommmandLine(int& argc, char **&argv);
+
 int main(int argc, char** argv)
 {
 
@@ -26,6 +29,7 @@ int main(int argc, char** argv)
 
     cout << "Number of arguments: "  << argc << endl;
     cout << "Program name:" << argv[0] << endl;
+    cout << "First argument: " << argv[1][0] << endl;
 
 
 
@@ -35,4 +39,9 @@ int main(int argc, char** argv)
 
 
     return 0;
+}
+
+void parseCommmandLine(int& argc, char **&argv)
+{
+
 }
