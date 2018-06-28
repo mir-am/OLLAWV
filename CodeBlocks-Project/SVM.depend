@@ -1,0 +1,27 @@
+# depslib dependency file v1.0
+1530176164 source:e:\archive\amir_archive\amir-personal\projects\svm\main.cpp
+	<iostream>
+	<vector>
+	<algorithm>
+	"timer.h"
+
+1530129481 source:e:\archive\amir_archive\amir-personal\projects\svm\timer.cc
+	"timer.h"
+
+1530129375 e:\archive\amir_archive\amir-personal\projects\svm\timer.h
+	<ctime>
+
+1530195468 source:e:\archive\amir_archive\amir-personal\projects\svm\svm.cpp
+	<math.h>
+	<stdio.h>
+	<stdlib.h>
+	<ctype.h>
+	<float.h>
+	<string.h>
+	<stdarg.h>
+	<limits.h>
+	<locale.h>
+	"svm.h"
+
+1530187243 e:\archive\amir_archive\amir-personal\projects\svm\svm.h
+
