@@ -3,46 +3,48 @@
 
 #include <string>
 #include <vector>
+#include "svm.h"
 
 typedef std::vector<std::vector<double> > stdvecvec;
 typedef std::vector<double> stdvec;
 
+std::vector<std::string> splitString(const std::string &str, char delim=' ');
 
 class FileReader
 {
-    public:
+    private:
 
         std::string fileName;
-        std::string delimeter;
-        // A vector of vectors to store data
-        std::vector <std::vector <std::string> > dataList;
-        // This pair holds data(features) and class labels
-        //std::pair<mat, imat> dataPair;
+        size_t elements; // Number of elements in dataset
 
-        // cotr
-        FileReader(std::string filename, std::string delm=","):
-            fileName(filename), delimeter(delm) {}
+        std::vector<std::vector<std::string> > trainingSet;
+
+        //std::string delimeter;
+        // A vector of vectors to store data
+        //std::vector <std::vector <std::string> > dataList;
+
+    public:
+
+        FileReader(std::string filename):
+            fileName(filename) {}
+
+        void readDataFile(SVMProblem& prob);
+
+        void readLIBSVM(SVMProblem& prob);
+
+        // Only for debugging purpose
+        //void printData(SVMProblem& prob);
 
         // Function to fetch data from CSV file
-        void getData(bool ignoreheader=false);
-
-        // Print data
-        void printData();
-
-        // Convert STL vector to Arma matrix for further operations
-        void convertMatrix();
+        //void getData(bool ignoreheader=false);
 
         // Convert STL vector<string> to STL vector<double>
-        stdvecvec convertVecD();
+        //stdvecvec convertVecD();
 
-        // Convert STL vector<double> to Arma mat
-        //mat std_vec_to_mat(stdvecvec &VecVec);
+        //        FileReader(std::string filename, std::string delm):
+//            fileName(filename), delimeter(delm) {}
 
 
-
-    protected:
-
-    private:
 };
 
 

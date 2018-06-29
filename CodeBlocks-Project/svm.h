@@ -1,15 +1,18 @@
 #ifndef SVM_H
 #define SVM_H
 
-struct SVMProblem
+struct SVMNode
 {
-
+    int index;
+    double value;
 };
 
 
-struct SVMNode
+struct SVMProblem
 {
-
+    int l; // Number of training samples
+    double *y; // Class labels
+    SVMNode **x; //
 };
 
 

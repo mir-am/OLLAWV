@@ -3,119 +3,146 @@
 #include <sstream>
 #include <fstream>
 #include <string>
-#include <vector>
 #include <stdlib.h>
 
 
-//CSVReader::CSVReader()
-//{
-//    //ctor
-//}
-
-void FileReader::getData(bool ignoreheader)
+std::vector<std::string> splitString(const std::string &str, char delim)
 {
-    std::ifstream data(fileName.c_str());
-    std::string line;
+    std::stringstream strStream(str);
+    std::string item;
+    std::vector<std::string> tokens;
 
-    // Skip first line
-    if(!ignoreheader == true)
+    while(std::getline(strStream, item, delim))
     {
-        std::getline(data, line);
+        tokens.push_back(item);
     }
 
-    while(std::getline(data, line))
-    {
-        std::stringstream lineStream(line);
-        std::string cell;
-        std::vector<std::string> tempList;
+    return tokens;
+}
 
-        while(std::getline(lineStream, cell, ','))
+
+void FileReader::readDataFile(SVMProblem& prob)
+{
+    elements = 0;
+    prob.l = 0;
+
+    std::ifstream file(fileName.c_str());
+
+    if(file.is_open())
+    {
+        std::cout << "Successfully read datafile!" << std::endl;
+        std::string line;
+
+        while(std::getline(file, line))
         {
-            tempList.push_back(cell);
+            // Tokenize
+            trainingSet.push_back(splitString(line));
+
+            elements += trainingSet[prob.l].size();
+            ++prob.l;
         }
 
-        // Assign tempList to dataList
-        dataList.push_back(tempList);
+        std::cout << prob.l << std::endl;
+        std::cout << elements << std::endl;
 
     }
-
-    data.close();
-
-    // For debugging porpuse...
-    //cout << dataList.size() << endl;
+    else
+    {
+        std::cout << "Failed to open dataset " << fileName << std::endl;
+        exit(1);
+    }
 
 }
 
+
+void FileReader::readLIBSVM(SVMProblem& prob)
+{
+    size_t j = 0;
+
+    // Allocate memory for training samples
+    prob.y = new double[prob.l];
+    prob.x = new SVMNode*[prob.l];
+    SVMNode* xSpace = new SVMNode[elements];
+
+    for(int i = 0; i < prob.l; ++i)
+    {
+        prob.x[i] = &xSpace[j];
+        prob.y[i] = atof(trainingSet[i][0].c_str());
+
+        for(size_t n = 1; n < trainingSet[i].size(); ++n)
+        {
+            // Tokenize with : delimiter
+            std::vector<std::string> node = splitString(trainingSet[i][n], ':');
+
+            xSpace[j].index = atoi(node[0].c_str()); // index
+            xSpace[j].value = atof(node[1].c_str()); // Feature value
+
+            //std::cout << "(" << xSpace[j].index << "," << xSpace[j].value << ")" << " ";
+
+            ++j; // next Node
+
+        }
+
+        //std::cout << std::endl;
+        xSpace[j++].index = -1; // last node of i-th sample
+
+    }
+}
 
 // Print CSV data
-void FileReader::printData()
-{
-    for(unsigned int i=0; i < dataList.size(); i++)
-    {
-        for(unsigned int j=0; j < dataList[i].size(); j++)
-        {
-            std::cout << dataList[i][j] << " ";
-        }
-
-        std::cout << "\n";
-    }
-
-}
-
-
-//void CSVReader::convertMatrix()
+//void FileReader::printData(SVMProblem& prob)
 //{
 //
-//    // Create a matrix for data(features)
-//    mat dataMatrix(dataList.size(), dataList[0].size() - 1, fill::zeros);
 //
-//    // Create a matrix for storing class labels
-//    imat labelMatrix(dataList.size(), 1, fill::zeros);
+//}
+
+//stdvecvec FileReader::convertVecD()
+//{
+//    stdvecvec dataVec(dataList.size(), stdvec(dataList[0].size()));
 //
-//    for(unsigned int i=0; i < dataList.size(); i++)
+//    for(unsigned int i = 0; i < dataList.size(); i++)
 //    {
-//        labelMatrix(i, 0) = atoi(dataList[i][0].c_str()); // Class label
-//
-//        for(unsigned int j=0; j < dataList[i].size() - 1; j++)
+//        for(unsigned int j = 0; j < dataList[i].size(); j++)
 //        {
-//            dataMatrix(i, j) = atof(dataList[i][j + 1].c_str()); // Features
+//            dataVec[i][j] = atof(dataList[i][j].c_str());
 //
 //        }
+//
 //    }
 //
-//    dataPair.first = dataMatrix;
-//    dataPair.second = labelMatrix;
+//    return dataVec;
 //}
 
-
-stdvecvec FileReader::convertVecD()
-{
-    stdvecvec dataVec(dataList.size(), stdvec(dataList[0].size()));
-
-    for(unsigned int i = 0; i < dataList.size(); i++)
-    {
-        for(unsigned int j = 0; j < dataList[i].size(); j++)
-        {
-            dataVec[i][j] = atof(dataList[i][j].c_str());
-
-        }
-
-    }
-
-    return dataVec;
-}
-
-
-//mat CSVReader::std_vec_to_mat(stdvecvec &VecVec)
+//void FileReader::getData(bool ignoreheader)
 //{
-//    mat data = zeros<mat>(VecVec.size(), VecVec[0].size());
+//    std::ifstream data(fileName.c_str());
+//    std::string line;
 //
-//    for(unsigned int i = 0; i < data.n_rows; i++)
+//    // Skip first line
+//    if(!ignoreheader == true)
 //    {
-//        data.row(i) = conv_to<rowvec>::from(VecVec[i]);
+//        std::getline(data, line);
+//    }
+//
+//    while(std::getline(data, line))
+//    {
+//        std::stringstream lineStream(line);
+//        std::string cell;
+//        std::vector<std::string> tempList;
+//
+//        while(std::getline(lineStream, cell, ','))
+//        {
+//            tempList.push_back(cell);
+//        }
+//
+//        // Assign tempList to dataList
+//        dataList.push_back(tempList);
 //
 //    }
 //
-//    return data;
+//    data.close();
+//
+//    // For debugging porpuse...
+//    //cout << dataList.size() << endl;
+//
 //}
-

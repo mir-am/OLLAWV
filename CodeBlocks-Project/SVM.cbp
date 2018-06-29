@@ -39,6 +39,8 @@
 		<Unit filename="svm.h" />
 		<Unit filename="timer.cc" />
 		<Unit filename="timer.h" />
+		<Unit filename="ui.cpp" />
+		<Unit filename="ui.h" />
 		<Extensions>
 			<code_completion />
 			<envvars />

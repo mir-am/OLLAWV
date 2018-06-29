@@ -2,6 +2,8 @@
 #include <vector>
 #include <algorithm>
 #include "svm.h"
+#include "ui.h"
+#include "FileReader.h"
 #include "timer.h"
 
 using namespace std;
@@ -19,19 +21,22 @@ static inline double powi(double base, int times)
 	return ret;
 }
 
-void parseCommmandLine(int& argc, char **&argv);
-
 int main(int argc, char** argv)
 {
 
     Timer timeElasped;
     timeElasped.start();
 
-    cout << "Number of arguments: "  << argc << endl;
-    cout << "Program name:" << argv[0] << endl;
-    cout << "First argument: " << argv[1][0] << endl;
+    UserInput userIn;
+    SVMProblem userProb;
+
+    userProb.x = new SVMNode*[10];
 
 
+    parseCommmandLine(argc, argv, userIn);
+    FileReader userDataset(userIn.dataFileName);
+    userDataset.readDataFile(userProb);
+    userDataset.readLIBSVM(userProb);
 
     timeElasped.stop();
 
@@ -41,7 +46,4 @@ int main(int argc, char** argv)
     return 0;
 }
 
-void parseCommmandLine(int& argc, char **&argv)
-{
 
-}
