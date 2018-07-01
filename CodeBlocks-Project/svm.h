@@ -12,7 +12,8 @@ struct SVMProblem
 {
     int l; // Number of training samples
     double *y; // Class labels
-    SVMNode **x; //
+    SVMNode **x; // Points to array pointers
+    SVMNode *xSpace; // Points to the elements (index, value)
 };
 
 
