@@ -45,6 +45,8 @@ int main(int argc, char** argv)
         exit(1);
     }
 
+    SVMModel model = trainSVM(userProb, userIn.parameters);
+
 
     timeElasped.stop();
 

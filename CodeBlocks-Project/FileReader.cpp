@@ -42,8 +42,8 @@ void FileReader::readDataFile(SVMProblem& prob)
             ++prob.l;
         }
 
-        std::cout << prob.l << std::endl;
-        std::cout << elements << std::endl;
+        std::cout << "Samples: " << prob.l << std::endl;
+        std::cout << "Elements: " << elements << std::endl;
 
     }
     else

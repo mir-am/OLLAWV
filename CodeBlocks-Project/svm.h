@@ -40,6 +40,20 @@ struct SVMModel
     double *bias;
 };
 
+
+struct decisionFunction
+{
+    double *alpha;
+    double bias;
+};
+
+
+template <typename T>
+inline void swapVar(T& x, T& y);
+
+void groupClasses(const SVMProblem& prob, int& numClass, int** label_ret,
+                          int** strat_ret, int** count_ret, int* perm);
+
 SVMModel trainSVM(const SVMProblem& prob, const SVMParameter& param);
 
 class SVM
