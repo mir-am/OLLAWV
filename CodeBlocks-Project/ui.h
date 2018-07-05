@@ -16,4 +16,6 @@ void exitHelp();
 
 void parseCommmandLine(int& argc, char **&argv, UserInput& userIn);
 
+std::string checkInputParameter(const SVMParameter&);
+
 #endif // UI_H

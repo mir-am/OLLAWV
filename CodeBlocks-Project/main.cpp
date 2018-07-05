@@ -6,7 +6,6 @@
 #include "FileReader.h"
 #include "timer.h"
 
-using namespace std;
 
 static inline double powi(double base, int times)
 {
@@ -29,18 +28,28 @@ int main(int argc, char** argv)
 
     UserInput userIn;
     SVMProblem userProb;
-
-    userProb.x = new SVMNode*[10];
-
+    std::string errorMsg;
 
     parseCommmandLine(argc, argv, userIn);
+
+    // Reading LIBSVM dataset supplied by the user
     FileReader userDataset(userIn.dataFileName);
     userDataset.readDataFile(userProb);
     userDataset.readLIBSVM(userProb);
 
+    errorMsg = checkInputParameter(userIn.parameters);
+
+    if(errorMsg.length() != 0)
+    {
+        std::cout << "ERROR: " << errorMsg << std::endl;
+        exit(1);
+    }
+
+
     timeElasped.stop();
 
-    cout << "Elapsed: " << timeElasped.getTimeElapsed() * 1000 << "ms" << endl;
+    std::cout << "Elapsed: " << timeElasped.getTimeElapsed() * 1000 <<
+    "ms" << std::endl;
 
 
     return 0;

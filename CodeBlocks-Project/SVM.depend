@@ -25,7 +25,7 @@
 
 1530187243 e:\archive\amir_archive\amir-personal\projects\svm\svm.h
 
-1530298425 source:e:\archive\amir_archive\amir-personal\projects\ollawv\codeblocks-project\main.cpp
+1530784162 source:e:\archive\amir_archive\amir-personal\projects\ollawv\codeblocks-project\main.cpp
 	<iostream>
 	<vector>
 	<algorithm>
@@ -56,15 +56,15 @@
 1530198926 source:e:\archive\amir_archive\amir-personal\projects\ollawv\codeblocks-project\svm.cpp
 	"svm.h"
 
-1530469344 e:\archive\amir_archive\amir-personal\projects\ollawv\codeblocks-project\svm.h
+1530786850 e:\archive\amir_archive\amir-personal\projects\ollawv\codeblocks-project\svm.h
 
-1530211746 source:e:\archive\amir_archive\amir-personal\projects\ollawv\codeblocks-project\ui.cpp
+1530783720 source:e:\archive\amir_archive\amir-personal\projects\ollawv\codeblocks-project\ui.cpp
 	"ui.h"
 	<iostream>
 	<string>
 	<stdlib.h>
 
-1530211032 e:\archive\amir_archive\amir-personal\projects\ollawv\codeblocks-project\ui.h
+1530783113 e:\archive\amir_archive\amir-personal\projects\ollawv\codeblocks-project\ui.h
 	"svm.h"
 	<string>
 

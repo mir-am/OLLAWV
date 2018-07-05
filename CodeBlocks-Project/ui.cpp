@@ -75,3 +75,17 @@ void parseCommmandLine(int& argc, char **&argv, UserInput& userIn)
 
     }
 }
+
+std::string checkInputParameter(const SVMParameter& param)
+{
+    if(param.gamma < 0)
+        return "gamma < 0. gamma is a positive parameter.";
+
+    if(param.e <= 0 || param.e >= 1)
+        return "Optimizer stopping criteria should be in the interval(0, 1).";
+
+    if(param.C <= 0)
+        return "C <= 0. C penalty parameter should be positive.";
+
+    return "";
+}

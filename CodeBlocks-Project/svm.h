@@ -28,9 +28,19 @@ struct SVMParameter
 
 struct SVMModel
 {
+    SVMParameter param;
+    int numClass;
+    int *label; // Label of each class
 
+    int numSV; // total SupportVectors
+    SVMNode **SV;
+    int *svIndices;
+    int *svClass; // Number of SVs for each class
+
+    double *bias;
 };
 
+SVMModel trainSVM(const SVMProblem& prob, const SVMParameter& param);
 
 class SVM
 {
