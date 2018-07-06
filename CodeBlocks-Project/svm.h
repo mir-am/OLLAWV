@@ -54,16 +54,24 @@ inline void swapVar(T& x, T& y);
 void groupClasses(const SVMProblem& prob, int& numClass, int** label_ret,
                           int** strat_ret, int** count_ret, int* perm);
 
+decisionFunction trainOneSVM(const SVMProblem& prob, const SVMParameter& param);
+
 SVMModel trainSVM(const SVMProblem& prob, const SVMParameter& param);
 
-class SVM
+
+class Solver
 {
+    private:
+
+        SVMParameter parameter;
+
     public:
-        SVM();
+
+        Solver(const SVMParameter& param): parameter(param) {};
+        void solveProblem(SVMProblem& prob, decisionFunction& soultionInfo);
 
     protected:
 
-    private:
 };
 
 #endif // SVM_H

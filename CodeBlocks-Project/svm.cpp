@@ -100,6 +100,19 @@ void groupClasses(const SVMProblem& prob, int& numClass, int** label_ret,
 }
 
 
+decisionFunction trainOneSVM(const SVMProblem& prob, const SVMParameter& param)
+{
+
+    decisionFunction solutionInfo;
+    solutionInfo.alpha = new double[prob.l];
+
+    for(int i = 0; i < prob.l; ++i)
+        solutionInfo.alpha[i] = 0;
+
+
+}
+
+
 SVMModel trainSVM(const SVMProblem& prob, const SVMParameter& param)
 {
     // Classification
@@ -117,6 +130,9 @@ SVMModel trainSVM(const SVMProblem& prob, const SVMParameter& param)
 
     // Allocate space for samples with respect to perm
     SVMNode** x = new SVMNode*[numSamples];
+
+    for(int i = 0; i < numSamples; ++i)
+        x[i] = prob.x[perm[i]];
 
     // Train k*(k-1)/2 models
     bool* nonZero = new bool[numSamples];
@@ -140,12 +156,25 @@ SVMModel trainSVM(const SVMProblem& prob, const SVMParameter& param)
             int ci = count[i], cj = count[j];
 
             subProb.l = ci + cj;
+            subProb.x = new SVMNode*[subProb.l];
+            subProb.y = new double[subProb.l];
+
+            // select all the samples of j-th class
+            for(int k = 0; k < ci;++k)
+            {
+                subProb.x[k] = x[si+k];
+                subProb.y[k] = +1;
+            }
+            for(int k = 0; k < cj;++k)
+            {
+                subProb.x[ci+k] = x[sj+k];
+                subProb.y[ci+k] = -1;
+            }
+
+            //f[p] =
+
         }
 
 }
 
 
-SVM::SVM()
-{
-    //ctor
-}
