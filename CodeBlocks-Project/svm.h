@@ -58,20 +58,7 @@ decisionFunction trainOneSVM(const SVMProblem& prob, const SVMParameter& param);
 
 SVMModel trainSVM(const SVMProblem& prob, const SVMParameter& param);
 
-
-class Solver
-{
-    private:
-
-        SVMParameter parameter;
-
-    public:
-
-        Solver(const SVMParameter& param): parameter(param) {};
-        void solveProblem(SVMProblem& prob, decisionFunction& soultionInfo);
-
-    protected:
-
-};
+void SVMSolver(const SVMProblem& prob, const SVMParameter& para,
+               decisionFunction& solution);
 
 #endif // SVM_H

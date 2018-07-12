@@ -3,7 +3,9 @@
 #include <sstream>
 #include <fstream>
 #include <string>
+#include <cstring>
 #include <stdlib.h>
+#include <direct.h>
 
 
 std::vector<std::string> splitString(const std::string &str, char delim)
@@ -45,10 +47,24 @@ void FileReader::readDataFile(SVMProblem& prob)
         std::cout << "Samples: " << prob.l << std::endl;
         std::cout << "Elements: " << elements << std::endl;
 
+        file.close();
     }
     else
     {
         std::cout << "Failed to open dataset " << fileName << std::endl;
+        // strerror is NOT thread safe!
+        std::cerr << "Error: " << strerror(errno);
+
+        char buffer[1000];
+        char* answer = getcwd(buffer, sizeof(buffer));
+        std::string s_cwd;
+        if(answer)
+        {
+            s_cwd = answer;
+            std::cout << s_cwd << std::endl;
+        }
+
+
         exit(1);
     }
 

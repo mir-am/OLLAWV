@@ -1,6 +1,9 @@
 #include "svm.h"
 #include <cstddef>
 #include <iostream>
+#include <vector>
+#include <numeric>
+#include <math.h>
 
 
 template <typename T>
@@ -106,8 +109,13 @@ decisionFunction trainOneSVM(const SVMProblem& prob, const SVMParameter& param)
     decisionFunction solutionInfo;
     solutionInfo.alpha = new double[prob.l];
 
+    // Initialize the solution
     for(int i = 0; i < prob.l; ++i)
         solutionInfo.alpha[i] = 0;
+
+    solutionInfo.bias = 0.0;
+
+    SVMSolver(prob, param, solutionInfo);
 
 
 }
@@ -148,7 +156,6 @@ SVMModel trainSVM(const SVMProblem& prob, const SVMParameter& param)
         for(int j = i + 1; j < numClass; ++j)
         {
             SVMProblem subProb; // A sub problem for i-th and j-th class
-            //subProb
 
             // start points of i-th and j-th classes
             int si = start[i], sj = start[j];
@@ -171,10 +178,64 @@ SVMModel trainSVM(const SVMProblem& prob, const SVMParameter& param)
                 subProb.y[ci+k] = -1;
             }
 
-            //f[p] =
+            f[p] = trainOneSVM(subProb, param);
 
         }
 
 }
 
+
+void SVMSolver(const SVMProblem& prob, const SVMParameter& para,
+               decisionFunction& solution)
+{
+
+    // M value is scaled value of C.
+    double M = para.e * para.C;
+
+    // Output vector
+    std::vector<double> outputVec(prob.l, 0);
+    int t = 0; // Iterations
+    // Learn rate
+    double learnRate;
+    double B;
+
+    // Initialize hinge loss error and worst violator index
+    unsigned int idxWV = 0;
+    double yo = prob.y[idxWV] * outputVec[idxWV];
+    double hingeLoss;
+
+    // Indexes
+    std::vector<size_t> nonSVIdx(prob.l);
+    std::iota(nonSVIdx.begin(), nonSVIdx.end(), 0);
+
+    while(yo < M)
+    {
+        ++t;
+        learnRate = 2 / sqrt(t);
+
+        // Remove worst violator from index set
+        nonSVIdx.erase(nonSVIdx.begin() + idxWV);
+
+        // Calculate
+        hingeLoss = learnRate * para.C * prob.y[idxWV];
+
+        // Calculate bias term
+        B = hingeLoss / prob.l;
+
+        // Update worst violator's alpha value
+        solution.alpha[idxWV] += hingeLoss;
+        solution.bias += B;
+
+        if (nonSVIdx.size() != 0)
+        {
+            outputVec[nonSVIdx[0]] += hingeLoss
+        }
+
+        break;
+
+    }
+
+
+
+}
 

@@ -300,25 +300,25 @@ def grid_search(data_train, data_labels, c_l_bound, c_u_bound, rbf_lbound, \
 c = 4 ** 2
 y = 4 ** -2
 
-train_data, lables, filename = read_data('../dataset/WDBC.csv')
+train_data, lables, filename = read_data('../dataset/pima-indian.csv')
 X_t, X_te, y_tr, y_te = train_test_split(train_data, lables, test_size=0.2,\
                                                     random_state=42)
 
 start_t = time.time()
 
-#svm_1 = OLLAWV(c, y)
-#svm_1.fit(X_t, y_tr)
-#result = svm_1.predict(X_te)
+svm_1 = OLLAWV(c, y)
+svm_1.fit(X_t, y_tr)
+result = svm_1.predict(X_te)
 
 #cv_test = cv_svm_nl(train_data, lables, 5, c, y)
 
 #a = svm_1.alpha
 #b = svm_1.bias
 
-#print("Finished in %.2f sec" % ((time.time() - start_t)))
+print("Finished in %.2f sec" % ((time.time() - start_t)))
 #print("CV acc: %.2f " % cv_test)
 #print('percent of support vectors: %.2f' % ((np.count_nonzero(a) / a.shape[0])*100))
-#print("Accuracy: %.2f" % (accuracy_score(y_te, result) * 100))
+print("Accuracy: %.2f" % (accuracy_score(y_te, result) * 100))
 
-grid_search(train_data, lables, -2, 5, -5, 2)
+#grid_search(train_data, lables, -2, 5, -5, 2)
 
