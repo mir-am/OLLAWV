@@ -45,11 +45,14 @@ struct decisionFunction
 {
     double *alpha;
     double bias;
+    double obj; // Objective value
 };
 
 
 template <typename T>
 inline void swapVar(T& x, T& y);
+
+double kernelRBF(const SVMNode *x, const SVMNode *y, const double& gamma);
 
 void groupClasses(const SVMProblem& prob, int& numClass, int** label_ret,
                           int** strat_ret, int** count_ret, int* perm);

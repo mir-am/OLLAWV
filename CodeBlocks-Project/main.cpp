@@ -24,11 +24,12 @@ int main(int argc, char** argv)
 {
 
     Timer timeElasped;
-    timeElasped.start();
 
     UserInput userIn;
     SVMProblem userProb;
     std::string errorMsg;
+
+    timeElasped.start();
 
     parseCommmandLine(argc, argv, userIn);
 
@@ -44,6 +45,7 @@ int main(int argc, char** argv)
         std::cout << "ERROR: " << errorMsg << std::endl;
         exit(1);
     }
+
 
     SVMModel model = trainSVM(userProb, userIn.parameters);
 
