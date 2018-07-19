@@ -168,7 +168,7 @@ decisionFunction trainOneSVM(const SVMProblem& prob, const SVMParameter& param)
     int nSV = 0;
     for(int i = 0; i < prob.l; ++i)
     {
-        if(fabs(solutionInfo.alpha[i] > 0))
+        if(fabs(solutionInfo.alpha[i]) > 0)
             ++nSV;
     }
 
@@ -178,11 +178,11 @@ decisionFunction trainOneSVM(const SVMProblem& prob, const SVMParameter& param)
 }
 
 
-SVMModel trainSVM(const SVMProblem& prob, const SVMParameter& param)
+SVMModel* trainSVM(const SVMProblem& prob, const SVMParameter& param)
 {
     // Classification
-    SVMModel model;
-    model.param = param;
+    SVMModel* model = new SVMModel;
+    model->param = param;
 
     int numSamples = prob.l;
     int numClass;
@@ -210,6 +210,7 @@ SVMModel trainSVM(const SVMProblem& prob, const SVMParameter& param)
 
     int p = 0;
     for(int i = 0; i < numClass; ++i)
+    {
         for(int j = i + 1; j < numClass; ++j)
         {
             SVMProblem subProb; // A sub problem for i-th and j-th class
@@ -218,6 +219,10 @@ SVMModel trainSVM(const SVMProblem& prob, const SVMParameter& param)
             int si = start[i], sj = start[j];
             // Number of samples in i-th and j-th class
             int ci = count[i], cj = count[j];
+
+            // For debugging
+            //std::cout << "si: " << si << " sj: " << sj << std::endl;
+            //std::cout << "ci: " << ci << " cj: " << cj << std::endl;
 
             subProb.l = ci + cj;
             subProb.x = new SVMNode*[subProb.l];
@@ -237,8 +242,135 @@ SVMModel trainSVM(const SVMProblem& prob, const SVMParameter& param)
 
             f[p] = trainOneSVM(subProb, param);
 
+            // Count number of support vectors of each class
+            for(int k = 0; k < ci; ++k)
+            {
+                if(!nonZero[si + k] && fabs(f[p].alpha[k]) > 0)
+                    nonZero[si + k] = true;
+            }
+
+            for(int k = 0; k < cj; ++k)
+            {
+                if(!nonZero[sj + k] && fabs(f[p].alpha[ci + k]) > 0)
+                    nonZero[sj + k] = true;
+
+            }
+
+            // Free memory!
+            delete[] subProb.x;
+            delete[] subProb.y;
+            ++p;
+        }
+    }
+
+    // Build model
+    model->numClass = numClass;
+    model->label = label;
+
+    model->bias = new double[numClass * (numClass - 1) / 2];
+    for(int i = 0; i < numClass * (numClass - 1) / 2; ++i)
+         model->bias[i] = f[i].bias;
+
+    int totalSV = 0;
+    int* nzCount = new int[numClass];
+    model->svClass = new int[numClass];
+
+    for(int i = 0; i < numClass; ++i)
+    {
+        int nSV = 0;
+        for(int j = 0; j < count[i]; ++j)
+        {
+            if(nonZero[start[i] + j])
+            {
+                ++nSV;
+                ++totalSV;
+            }
         }
 
+        model->svClass[i] = nSV;
+        nzCount[i] = nSV;
+
+        // For debugging
+        //std::cout << "Label: " << model->label[i] << " SVs: " <<
+        //model->svClass[i] << std::endl;
+    }
+
+
+    std::cout << "Total nSV: " << totalSV << std::endl;
+
+    model->numSV = totalSV;
+    model->SV = new SVMNode*[totalSV];
+    model->svIndices = new int[totalSV];
+
+    p = 0;
+    for(int i = 0; i < numSamples; ++i)
+    {
+        if(nonZero[i])
+        {
+            model->SV[p] = x[i];
+            model->svIndices[p++] = perm[i] + 1;
+        }
+    }
+
+    int* nzStart = new int[numClass];
+    nzStart[0] = 0;
+
+    for(int i = 1; i < numClass; ++i)
+        nzStart[i] = nzStart[i - 1] + nzCount[i - 1];
+
+    model->svCoef = new double*[numClass - 1];
+    for(int i = 0; i < numClass - 1; ++i)
+        model->svCoef[i] = new double[totalSV];
+
+    p = 0;
+    for(int i = 0; i < numClass; ++i)
+    {
+        for(int j = i + 1; j < numClass; ++j)
+        {
+            // classifier (i,j): coefficients with
+            // i are in sv_coef[j-1][nz_start[i]...],
+            // j are in sv_coef[i][nz_start[j]...]
+
+            int si = start[i];
+            int sj = start[j];
+            int ci = count[i];
+            int cj = count[j];
+
+            int q = nzStart[i];
+            for(int k = 0; k < ci; ++k)
+            {
+                if(nonZero[si + k])
+                    model->svCoef[j - 1][q++] = f[p].alpha[k];
+            }
+
+            q = nzStart[j];
+            for(int k = 0; k < cj; ++k)
+            {
+                if(nonZero[sj + k])
+                    model->svCoef[i][q++] = f[p].alpha[ci + k];
+            }
+
+            ++p;
+        }
+    }
+
+    // Free memory
+    delete[] label;
+    delete[] count;
+    delete[] perm;
+    delete[] start;
+    delete[] x;
+    delete[] nonZero;
+
+    // Delete decision functions
+    for(int i = 0; i < numClass * (numClass - 1) / 2 ; ++i)
+        delete[] f[i].alpha;
+
+    delete[] f;
+    delete[] nzCount;
+    delete[] nzStart;
+
+    return model;
 }
 
 

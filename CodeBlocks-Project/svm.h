@@ -34,6 +34,7 @@ struct SVMModel
 
     int numSV; // total SupportVectors
     SVMNode **SV;
+    double **svCoef; // coefficients for SVs in decision function
     int *svIndices;
     int *svClass; // Number of SVs for each class
 
@@ -59,7 +60,7 @@ void groupClasses(const SVMProblem& prob, int& numClass, int** label_ret,
 
 decisionFunction trainOneSVM(const SVMProblem& prob, const SVMParameter& param);
 
-SVMModel trainSVM(const SVMProblem& prob, const SVMParameter& param);
+SVMModel* trainSVM(const SVMProblem& prob, const SVMParameter& param);
 
 void SVMSolver(const SVMProblem& prob, const SVMParameter& para,
                decisionFunction& solution);
