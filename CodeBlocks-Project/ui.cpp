@@ -67,6 +67,12 @@ void parseCommmandLine(int& argc, char **&argv, UserInput& userIn)
                 std::cout << "Filename:" << argv[i] << std::endl;
                 break;
 
+            case 't':
+
+                userIn.testFileName = argv[i];
+                std::cout << "Test filename: " << argv[i] << std::endl;
+                break;
+
             default:
 
                 std::cout << "Unknown option: -" << argv[i-1][1] << std::endl;

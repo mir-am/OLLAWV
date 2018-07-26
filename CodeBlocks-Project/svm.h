@@ -1,6 +1,8 @@
 #ifndef SVM_H
 #define SVM_H
 
+#include<string>
+
 struct SVMNode
 {
     int index;
@@ -64,5 +66,7 @@ SVMModel* trainSVM(const SVMProblem& prob, const SVMParameter& param);
 
 void SVMSolver(const SVMProblem& prob, const SVMParameter& para,
                decisionFunction& solution);
+
+void predict(std::string testFile, const SVMModel* model);
 
 #endif // SVM_H

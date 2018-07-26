@@ -9,6 +9,7 @@ struct UserInput
     SVMParameter parameters;
     int numFolds;
     std::string dataFileName;
+    std::string testFileName;
 
 };
 

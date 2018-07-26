@@ -11,7 +11,7 @@
 				<Option object_output="obj/Debug/" />
 				<Option type="1" />
 				<Option compiler="gcc" />
-				<Option parameters="-c 0.1 -g 0.01 -k 5 -f .\bin\Debug\heart.libsvm" />
+				<Option parameters="-c 0.1 -g 0.01 -k 5 -f .\bin\Debug\heart.libsvm -t .\bin\Debug\heart.libsvm" />
 				<Compiler>
 					<Add option="-std=c++11" />
 					<Add option="-g" />
@@ -22,7 +22,7 @@
 				<Option object_output="obj/Release/" />
 				<Option type="1" />
 				<Option compiler="gcc" />
-				<Option parameters="-c 0.1 -g 0.01 -k 5 -f .\bin\Debug\heart.libsvm" />
+				<Option parameters="-c 0.1 -g 0.01 -k 5 -f .\bin\Debug\heart.libsvm -t .\bin\Debug\heart.libsvm" />
 				<Compiler>
 					<Add option="-O2" />
 					<Add option="-std=c++11" />

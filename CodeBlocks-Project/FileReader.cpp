@@ -32,7 +32,7 @@ void FileReader::readDataFile(SVMProblem& prob)
 
     if(file.is_open())
     {
-        std::cout << "Successfully read datafile!" << std::endl;
+        std::cout << "Successfully read training datafile!" << std::endl;
         std::string line;
 
         while(std::getline(file, line))

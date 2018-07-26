@@ -49,6 +49,7 @@ int main(int argc, char** argv)
 
     SVMModel* model = trainSVM(userProb, userIn.parameters);
 
+    predict(userIn.testFileName, model);
 
     timeElasped.stop();
 

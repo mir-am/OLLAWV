@@ -1,10 +1,12 @@
 #include "svm.h"
 #include <cstddef>
 #include <iostream>
+#include <fstream>
 #include <vector>
 #include <numeric>
 #include <algorithm>
 #include <math.h>
+#include "FileReader.h"
 
 
 template <typename T>
@@ -459,3 +461,67 @@ void SVMSolver(const SVMProblem& prob, const SVMParameter& para,
 
 }
 
+
+void predict(std::string testFile, const SVMModel* model)
+{
+    int correct = 0;
+    int total = 0;
+    int numClass = model->numClass;
+    // Allocating 64 SVM nodes. Suppose that features are not more than 64.
+    unsigned int maxNumAttr = 64;
+
+    // Read test datafile
+    std::ifstream testDataFile(testFile.c_str());
+
+    if(testDataFile.is_open())
+    {
+        std::cout << "Successfully read test datafile!" << std::endl;
+        std::string line;
+
+        SVMNode* x = new SVMNode[maxNumAttr];
+
+        // Reading each test sample
+        while(std::getline(testDataFile, line))
+        {
+            int i = 0;
+            double targetLabel, predictLabel;
+
+            std::vector<std::string> testSample = splitString(line);
+
+            // Reallocating memory if num. of features are more than 64
+            if(testSample.size() - 1 >= maxNumAttr - 1)
+            {
+
+                // Delete the previous allocated mem. blocks to avoid mem. leak
+                delete[] x;
+
+                maxNumAttr *= 2;
+                x = new SVMNode[maxNumAttr];
+
+            }
+
+            targetLabel = atof(testSample[0].c_str());
+
+            for(int j = 1; j < testSample.size(); ++j)
+            {
+                std::vector<std::string> node = splitString(testSample[j], ':');
+
+                x[i].index = atoi(node[0].c_str());
+                x[i].value = atof(node[1].c_str());
+
+                ++i;
+            }
+
+            x[i].index = -1;
+
+
+        }
+
+        testDataFile.close();
+    }
+    else
+    {
+        std::cout << "Failed to open test file. " << testFile << std::endl;
+    }
+
+}
