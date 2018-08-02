@@ -13,7 +13,8 @@ void exitHelp()
     "-g gamma: the parameter of RBF kernel function. (default 1)\n"
     "-k folds: k-fold crossvalidation mode.\n"
     "-e epsilon: set tolerance of termination criterion. (default 0.1)\n"
-    "-f file: name of dataset file\n";
+    "-f file: name of training file\n"
+    "-t file: name of test file";
 
     std::cout << helpMessage << std::endl;
     exit(1);

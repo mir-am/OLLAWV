@@ -16,7 +16,14 @@ std::vector<std::string> splitString(const std::string &str, char delim)
 
     while(std::getline(strStream, item, delim))
     {
-        tokens.push_back(item);
+
+        // Ignore white space in lines of dataset file
+        if(item.find_first_not_of(' ') != std::string::npos)
+        {
+            //std::cout << item << std::endl;
+            tokens.push_back(item);
+        }
+
     }
 
     return tokens;

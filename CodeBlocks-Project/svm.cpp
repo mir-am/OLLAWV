@@ -525,8 +525,8 @@ double computeVotes(const SVMModel* model, const SVMNode* x, double* decValues)
         if(vote[i] > vote[voteMaxIdx])
             voteMaxIdx = i;
 
-    std::cout << "VoteMax: " << voteMaxIdx << std::endl;
-    std::cout << "Predicted label: " << model->label[voteMaxIdx] << std::endl;
+    //std::cout << "VoteMax: " << voteMaxIdx << std::endl;
+    //std::cout << "Predicted label: " << model->label[voteMaxIdx] << std::endl;
 
     delete[] kValue;
     delete[] start;
@@ -605,7 +605,15 @@ void predict(std::string testFile, const SVMModel* model)
 
             predictLabel = SVMPredict(model, x);
 
+            if(predictLabel == targetLabel)
+                ++correct;
+
+            ++total;
+
         }
+
+        std::cout << "Accuracy: " << (double) correct / total * 100 <<
+         " % (" << correct << "/" << total << ")" << " Classification" << std::endl;
 
         testDataFile.close();
     }
