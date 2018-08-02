@@ -267,7 +267,10 @@ SVMModel* trainSVM(const SVMProblem& prob, const SVMParameter& param)
 
     // Build model
     model->numClass = numClass;
-    model->label = label;
+    // Copy the labels
+    model->label = new int[numClass];
+    for(int i = 0; i < numClass; ++i)
+        model->label[i] = label[i];
 
     model->bias = new double[numClass * (numClass - 1) / 2];
     for(int i = 0; i < numClass * (numClass - 1) / 2; ++i)
@@ -357,7 +360,7 @@ SVMModel* trainSVM(const SVMProblem& prob, const SVMParameter& param)
     }
 
     // Free memory
-    delete[] label;
+    //delete[] label;
     delete[] count;
     delete[] perm;
     delete[] start;
@@ -462,6 +465,92 @@ void SVMSolver(const SVMProblem& prob, const SVMParameter& para,
 }
 
 
+double computeVotes(const SVMModel* model, const SVMNode* x, double* decValues)
+{
+    int numClasses = model->numClass;
+    int numSamples = model->numSV;
+
+    // Kernel values
+    double* kValue = new double[numSamples];
+
+    for(int i = 0; i < numSamples; ++i)
+        kValue[i] = kernelRBF(x, model->SV[i], model->param.gamma);
+
+    int* start = new int[numClasses];
+    start[0] = 0;
+    for(int i = 1; i < numClasses; ++i)
+        start[i] = start[i - 1] + model->svClass[i - 1];
+
+    // Initialize votes
+    int* vote = new int[numClasses];
+    for(int i = 0; i < numClasses; ++i)
+        vote[i] = 0;
+
+    int p = 0;
+    for(int i = 0; i < numClasses; ++i)
+        for(int j = i + 1; j < numClasses; ++j)
+        {
+            double sum = 0;
+            int si = start[i];
+            int sj = start[j];
+            int ci = model->svClass[i];
+            int cj = model->svClass[j];
+
+            double* coef1 = model->svCoef[j - 1];
+            double* coef2 = model->svCoef[i];
+
+            for(int k = 0; k < ci; ++k)
+                sum += coef1[si + k] * kValue[si + k];
+
+            for(int k = 0; k < cj; ++k)
+                sum += coef2[sj + k] * kValue[sj + k];
+
+            // Bias
+            sum -= model->bias[p];
+            decValues[p] = sum;
+
+            if(decValues[p] > 0)
+                ++vote[i];
+            else
+                ++vote[j];
+
+            // For debugging purpose
+            //std::cout << "Vote " << vote[i] << " |Vote " << vote[j] << std::endl;
+
+            p++;
+        }
+
+    int voteMaxIdx = 0;
+    for(int i = 1; i < numClasses; ++i)
+        if(vote[i] > vote[voteMaxIdx])
+            voteMaxIdx = i;
+
+    std::cout << "VoteMax: " << voteMaxIdx << std::endl;
+    std::cout << "Predicted label: " << model->label[voteMaxIdx] << std::endl;
+
+    delete[] kValue;
+    delete[] start;
+    delete[] vote;
+
+    return model->label[voteMaxIdx];
+}
+
+
+double SVMPredict(const SVMModel* model, const SVMNode* x)
+{
+    int numClass = model->numClass;
+    double* decValues;
+
+    decValues = new double[numClass * (numClass - 1) / 2];
+
+    double predResult = computeVotes(model, x, decValues);
+
+    delete[] decValues;
+
+    return predResult;
+}
+
+
 void predict(std::string testFile, const SVMModel* model)
 {
     int correct = 0;
@@ -502,7 +591,7 @@ void predict(std::string testFile, const SVMModel* model)
 
             targetLabel = atof(testSample[0].c_str());
 
-            for(int j = 1; j < testSample.size(); ++j)
+            for(unsigned int j = 1; j < testSample.size(); ++j)
             {
                 std::vector<std::string> node = splitString(testSample[j], ':');
 
@@ -514,6 +603,7 @@ void predict(std::string testFile, const SVMModel* model)
 
             x[i].index = -1;
 
+            predictLabel = SVMPredict(model, x);
 
         }
 

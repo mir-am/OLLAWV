@@ -67,6 +67,11 @@ SVMModel* trainSVM(const SVMProblem& prob, const SVMParameter& param);
 void SVMSolver(const SVMProblem& prob, const SVMParameter& para,
                decisionFunction& solution);
 
+// Multiclass classification, a vote strategy would be used.
+double computeVotes(const SVMModel* model, const SVMNode* x, double* decValues);
+
+double SVMPredict(const SVMModel* model, const SVMNode* x);
+
 void predict(std::string testFile, const SVMModel* model);
 
 #endif // SVM_H
