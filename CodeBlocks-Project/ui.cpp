@@ -27,6 +27,7 @@ void parseCommmandLine(int& argc, char **&argv, UserInput& userIn)
     userIn.parameters.gamma = 1;
     userIn.parameters.e = 0.1;
     userIn.numFolds = 5;
+    userIn.CV = false;
 
     // Parse command line arguments [option]
     for(int i = 1; i < argc; ++i)
@@ -54,6 +55,7 @@ void parseCommmandLine(int& argc, char **&argv, UserInput& userIn)
             case 'k':
 
                 userIn.numFolds = atoi(argv[i]);
+                userIn.CV = true;
 
                 if(userIn.numFolds < 2)
                 {

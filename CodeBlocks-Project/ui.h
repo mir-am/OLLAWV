@@ -7,6 +7,7 @@
 struct UserInput
 {
     SVMParameter parameters;
+    bool CV; // whether or not to run crossvalidation
     int numFolds;
     std::string dataFileName;
     std::string testFileName;

@@ -10,7 +10,7 @@
 
 
 template <typename T>
-inline void swapVar(T& x, T& y)
+static inline void swapVar(T& x, T& y)
 {
     T temp = x;
     x = y;
@@ -622,4 +622,73 @@ void predict(std::string testFile, const SVMModel* model)
         std::cout << "Failed to open test file. " << testFile << std::endl;
     }
 
+}
+
+
+void crossValidation(const SVMProblem& prob, SVMParameter& param, int numFolds)
+{
+    int totalCorrect;
+    double *target = new double[prob.l];
+    int* foldStart;
+    int numSamples = prob.l;
+    int* perm = new int[numSamples];
+    int numClasses;
+
+    int* start = NULL;
+    int* label = NULL;
+    int* count = NULL;
+
+    groupClasses(prob, numClasses, &label, &start, &count, perm);
+
+    // Random shuffle
+    foldStart = new int[numFolds + 1];
+    int* foldCount = new int[numFolds];
+    int* index = new int[numSamples];
+
+    for(int i = 0; i < numSamples; ++i)
+        index[i] = perm[i];
+
+    for(int c = 0; c < numClasses; ++c)
+        for(int i = 0; i < count[c]; ++i)
+        {
+            int j = i + rand() % (count[c] - i);
+            swapVar(index[start[c] + j], index[start[c] + i]);
+        }
+
+    for(int i = 0; i < numFolds; ++i)
+    {
+        foldCount[i] = 0;
+        for(int c = 0; c < numClasses; ++c)
+            foldCount[i] += (i + 1) * count[c] / numFolds - i * count[c] / numFolds;
+
+        std::cout << "Fold " << i << ": " << foldCount[i] << std::endl;
+    }
+
+    foldStart[0] = 0;
+    for(int i = 1; i <= numFolds; ++i)
+    {
+        foldStart[i] = foldStart[i - 1] + foldCount[i - 1];
+        std::cout << "startFold " << i << ": " << foldCount[i] << std::endl;
+    }
+
+    for(int c = 0; c < numClasses; ++c)
+        for(int i = 0; i < numFolds; ++i)
+        {
+            int begin = start[c] + i * count[c] / numFolds;
+            int end = start[c] + (i + 1) * count[c] / numFolds;
+
+            //std::cout << "C:" << c << " Fold " << i << " " << "Begin: "
+             //<< begin << " End: " << end << std::endl;
+
+             for(int j = begin; j < end; ++j)
+             {
+                 perm[foldStart[i]] = index[j];
+                 ++foldStart[i];
+             }
+
+        }
+
+    foldStart[0] = 0;
+    for(int i = 0; i < numFolds; ++i)
+        foldStart[i] = foldStart[i - 1] + foldCount[i - 1];
 }

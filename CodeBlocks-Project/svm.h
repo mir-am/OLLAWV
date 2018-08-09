@@ -74,4 +74,6 @@ double SVMPredict(const SVMModel* model, const SVMNode* x);
 
 void predict(std::string testFile, const SVMModel* model);
 
+void crossValidation(const SVMProblem& prob, SVMParameter& param, int numFolds);
+
 #endif // SVM_H

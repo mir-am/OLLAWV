@@ -46,10 +46,16 @@ int main(int argc, char** argv)
         exit(1);
     }
 
+    if(userIn.CV)
+    {
+        crossValidation(userProb, userIn.parameters, userIn.numFolds);
+    }
+    else
+    {
+        SVMModel* model = trainSVM(userProb, userIn.parameters);
+        predict(userIn.testFileName, model);
+    }
 
-    SVMModel* model = trainSVM(userProb, userIn.parameters);
-
-    predict(userIn.testFileName, model);
 
     timeElasped.stop();
 
