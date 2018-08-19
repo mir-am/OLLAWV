@@ -360,7 +360,7 @@ SVMModel* trainSVM(const SVMProblem& prob, const SVMParameter& param)
     }
 
     // Free memory
-    //delete[] label;
+    delete[] label;
     delete[] count;
     delete[] perm;
     delete[] start;
@@ -627,7 +627,7 @@ void predict(std::string testFile, const SVMModel* model)
 
 void crossValidation(const SVMProblem& prob, SVMParameter& param, int numFolds)
 {
-    int totalCorrect;
+    int totalCorrect = 0;
     double *target = new double[prob.l];
     int* foldStart;
     int numSamples = prob.l;
@@ -691,4 +691,62 @@ void crossValidation(const SVMProblem& prob, SVMParameter& param, int numFolds)
     foldStart[0] = 0;
     for(int i = 0; i < numFolds; ++i)
         foldStart[i] = foldStart[i - 1] + foldCount[i - 1];
+
+    for(int i = 0; i < numFolds; ++i)
+    {
+        int begin = foldStart[i];
+        int end = foldStart[i + 1];
+        int k = 0;
+
+        SVMProblem subProb;
+        subProb.l = numSamples - (end - begin);
+        subProb.x = new SVMNode*[subProb.l];
+        subProb.y = new double[subProb.l];
+
+        for(int j = 0 ;j < begin; ++j)
+        {
+            subProb.x[k] = prob.x[perm[j]];
+            subProb.y[k] = prob.y[perm[j]];
+            ++k;
+        }
+        for(int j = end;j < numSamples; ++j)
+        {
+            subProb.x[k] = prob.x[perm[j]];
+            subProb.y[k] = prob.y[perm[j]];
+            ++k;
+        }
+
+        SVMModel* subModel = trainSVM(subProb, param);
+
+        for(int j = begin; j < end; ++j)
+        {
+            target[perm[j]] = SVMPredict(subModel, prob.x[j]);
+        }
+
+
+        delete[] subProb.x;
+        delete[] subProb.y;
+
+    }
+
+    // Compute accuracy
+    for(int i = 0; i < numSamples; ++i)
+    {
+        if(target[i] == prob.y[i])
+            ++totalCorrect;
+    }
+
+    std::cout << "Total correct: " << totalCorrect << std::endl;
+    std::cout << std::fixed << "Cross Validation Accuracy: " << 100.0 * totalCorrect / numSamples << std::endl;
+
+    delete[] start;
+    delete[] label;
+    delete[] count;
+    delete[] index;
+    delete[] foldCount;
+    delete[] foldStart;
+    delete[] perm;
+    delete[] target;
+
 }
+

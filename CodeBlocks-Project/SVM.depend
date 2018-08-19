@@ -79,3 +79,57 @@
 	"svm.h"
 	<string>
 
+1534659961 source:/home/mir/Mir/OLLAWV/CodeBlocks-Project/main.cpp
+	<iostream>
+	<vector>
+	<algorithm>
+	"svm.h"
+	"ui.h"
+	"FileReader.h"
+	"timer.h"
+
+1534659961 /home/mir/Mir/OLLAWV/CodeBlocks-Project/svm.h
+	<string>
+
+1534659961 /home/mir/Mir/OLLAWV/CodeBlocks-Project/ui.h
+	"svm.h"
+	<string>
+
+1534659961 /home/mir/Mir/OLLAWV/CodeBlocks-Project/FileReader.h
+	<string>
+	<vector>
+	"svm.h"
+
+1534659961 /home/mir/Mir/OLLAWV/CodeBlocks-Project/timer.h
+	<ctime>
+
+1534659961 source:/home/mir/Mir/OLLAWV/CodeBlocks-Project/svm.cpp
+	"svm.h"
+	<cstddef>
+	<iostream>
+	<fstream>
+	<vector>
+	<numeric>
+	<algorithm>
+	<math.h>
+	"FileReader.h"
+
+1534659961 source:/home/mir/Mir/OLLAWV/CodeBlocks-Project/timer.cc
+	"timer.h"
+
+1534659961 source:/home/mir/Mir/OLLAWV/CodeBlocks-Project/ui.cpp
+	"ui.h"
+	<iostream>
+	<string>
+	<stdlib.h>
+
+1534660384 source:/home/mir/Mir/OLLAWV/CodeBlocks-Project/FileReader.cpp
+	"FileReader.h"
+	<iostream>
+	<sstream>
+	<fstream>
+	<string>
+	<cstring>
+	<stdlib.h>
+	<direct.h>
+
