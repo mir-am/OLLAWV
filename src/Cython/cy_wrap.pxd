@@ -10,9 +10,9 @@ cimport numpy as np
 
 # Include
 
-cdef extern from "../lib/svm.h":
+cdef extern from "lib/svm.h":
     
-    cdef struct SVMDenseNode
+    cdef struct SVMNode
     cdef struct SVMModel
     
     cdef struct SVMParameter:
@@ -27,6 +27,20 @@ cdef extern from "../lib/svm.h":
         double *y
         SVMNode *x
         
+    char* SVMCheckParameter(SVMParameter*);
+        
+    SVMModel* SVMTrain(SVMProblem*, SVMParameter* , int*) nogil
+        
 
-
+cdef extern from "lib/svm_helper.c":
+    
+    # This file contains utility functions
+    
+    void setParameter(SVMParameter*, double, double, double)
+    
+    void setProblem(SVMProblem* , char*, char*, np.npy_intp *)
+    
+    
+    
+    
 

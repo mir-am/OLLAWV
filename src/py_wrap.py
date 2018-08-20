@@ -9,6 +9,10 @@ Python's wrapper for SVM classifier which is implemented in C++.
 
 """
 
+from dataproc import read_data
+from sklearn.model_selection import train_test_split
+import cy_wrap
+
 class SVM:
     
     """
@@ -34,11 +38,23 @@ class SVM:
         self.gamma = gamma
         self.tol = tol
     
-    def fit(self):
+    def fit(self, X_train, y_train):
         
-        pass
+        cy_wrap.fit(X_train, y_train.astype('float64'), self.C, self.gamma,
+                    self.tol)
     
     def predict(self):
         
         pass
+
+
+if __name__ == '__main__':
+    
+    train_data, lables, file_name = read_data('../dataset/pima-indian.csv')
+    
+    X_t, X_te, y_tr, y_te = train_test_split(train_data, lables, test_size=0.3,\
+                                                    random_state=42)
+    
+    model = SVM(1, 1)
+    model.fit(X_t, y_tr)
 
