@@ -53,63 +53,162 @@ static inline void swapVar(T& x, T& y)
 #endif
 
 
-const char *PREFIX(CheckParameter)(const SVMParameter *param)
+struct decisionFunction
 {
+    double *alpha;
+    double bias;
+    double obj; // Objective value
+};
 
-    if(param->gamma < 0)
-        return "gamma < 0. gamma is a positive parameter.";
 
-    if(param->e <= 0 || param->e >= 1)
-        return "Optimizer stopping criteria should be in the interval(0, 1).";
+static double kernelRBF(const PREFIX(Node) *x, const PREFIX(Node) *y, const double& gamma)
+{
+    double sum = 0;
 
-    if(param->C <= 0)
-        return "C <= 0. C penalty parameter should be positive.";
+#ifdef _DENSE_REP
 
-    return NULL;
+    int dim = std::min(x->dim, y->dim), i;
+
+    for(i = 0; i < dim; ++i)
+    {
+        double d = x->values[i] * y->values[i];
+        sum += d * d;
+    }
+
+    for( ; i < x->dim; ++i)
+        sum += x->values[i] * x->values[i];
+
+    for( ; i < y->dim; ++i)
+        sum += y->values[i] * y->values[i];
+
+#else
+
+    while(x->index != -1 && y->index != -1)
+    {
+        if(x->index == y->index)
+        {
+            double d = x->value - y->value;
+            sum += d * d;
+            ++x;
+            ++y;
+        }
+        else
+        {
+            if(x->index > y->index)
+            {
+                sum += y->value * y->value;
+                ++y;
+            }
+            else
+            {
+                sum += x->value * x->value;
+                ++x;
+            }
+        }
+    }
+
+    while(x->index != -1)
+    {
+        sum += x->value * x->value;
+        ++x;
+    }
+
+    while(y->index != -1)
+    {
+        sum += y->value * y->value;
+        ++y;
+    }
+
+#endif // _DENSE_REP
+
+    return exp(-gamma * sum);
 }
 
-//double kernelRBF(const SVMNode *x, const SVMNode *y, const double& gamma)
-//{
-//    double sum = 0;
-//
-//    while(x->index != -1 && y->index != -1)
-//    {
-//        if(x->index == y->index)
-//        {
-//            double d = x->value - y->value;
-//            sum += d * d;
-//            ++x;
-//            ++y;
-//        }
-//        else
-//        {
-//            if(x->index > y->index)
-//            {
-//                sum += y->value * y->value;
-//                ++y;
-//            }
-//            else
-//            {
-//                sum += x->value * x->value;
-//                ++x;
-//            }
-//        }
-//    }
-//
-//    while(x->index != -1)
-//    {
-//        sum += x->value * x->value;
-//        ++x;
-//    }
-//
-//    while(y->index != -1)
-//    {
-//        sum += y->value * y->value;
-//        ++y;
-//    }
-//
-//    return exp(-gamma * sum);
-//}
+static void SVMSolver(const SVMProblem& prob, const SVMParameter& para,
+               decisionFunction& solution)
+{
+
+    // M value is scaled value of C.
+    double M = para.e * para.C;
+
+    // Output vector
+    std::vector<double> outputVec(prob.l, 0);
+    int t = 0; // Iterations
+    // Learn rate
+    double learnRate;
+    double B;
+
+    // Initialize hinge loss error and worst violator index
+    unsigned int idxWV = 0;
+    double yo = prob.y[idxWV] * outputVec[idxWV];
+    double hingeLoss;
+
+    // Indexes
+    std::vector<size_t> nonSVIdx(prob.l);
+    std::iota(nonSVIdx.begin(), nonSVIdx.end(), 0);
+
+    while(yo < M)
+    {
+        ++t;
+        learnRate = 2 / sqrt(t);
+
+        // Remove worst violator from index set
+        nonSVIdx.erase(std::remove(nonSVIdx.begin(), nonSVIdx.end(), idxWV),
+                        nonSVIdx.end());
+
+        // Calculate
+        hingeLoss = learnRate * para.C * prob.y[idxWV];
+
+        // Calculate bias term
+        B = hingeLoss / prob.l;
+
+        // Update worst violator's alpha value
+        solution.alpha[idxWV] += hingeLoss;
+        solution.bias += B;
+
+        if (nonSVIdx.size() != 0)
+        {
+            outputVec[nonSVIdx[0]] += ((hingeLoss * kernelRBF(&prob.x[nonSVIdx[0]],
+                                      &prob.x[idxWV], para.gamma)) + B);
+
+            // Suppose that first element of nonSVIdx vector is worst violator sample
+            unsigned int newIdxWV = nonSVIdx[0];
+            yo = prob.y[newIdxWV] * outputVec[newIdxWV];
+
+            for(size_t idx = 1; idx < nonSVIdx.size(); ++idx)
+            {
+                outputVec[nonSVIdx[idx]] += ((hingeLoss * kernelRBF(&prob.x[nonSVIdx[idx]],
+                                            &prob.x[idxWV], para.gamma)) + B);
+
+                //std::cout << outputVec[nonSVIdx[idx]] << std::endl;
+
+                // Find worst violator
+                if((prob.y[nonSVIdx[idx]] * outputVec[nonSVIdx[idx]]) < yo)
+                {
+                    newIdxWV = nonSVIdx[idx];
+                    yo = prob.y[nonSVIdx[idx]] * outputVec[nonSVIdx[idx]];
+                }
+            }
+
+            // Found new worst violator sample
+            idxWV = newIdxWV;
+
+            //std::cout << "Worst violator idx: " << idxWV << std::endl;
+            //std::cout << "M: " << M << "yo: " << yo << std::endl;
+        }
+        else
+        {
+            break;
+        }
+
+    }
+
+    solution.obj = yo;
+
+    std::cout << "Iterations: " << t << std::endl;
+
+}
+
 
 static void groupClasses(const PREFIX(Problem) *prob, int* numClass, int** label_ret,
                           int** start_ret, int** count_ret, int* perm)
@@ -208,36 +307,37 @@ static void groupClasses(const PREFIX(Problem) *prob, int* numClass, int** label
 }
 
 
-//decisionFunction trainOneSVM(const SVMProblem& prob, const SVMParameter& param)
-//{
-//
-//    decisionFunction solutionInfo;
-//    solutionInfo.alpha = new double[prob.l];
-//
-//    // Initialize the solution
-//    for(int i = 0; i < prob.l; ++i)
-//        solutionInfo.alpha[i] = 0;
-//
-//    solutionInfo.bias = 0.0;
-//
-//    SVMSolver(prob, param, solutionInfo);
-//
-//    std::cout << "obj = " << solutionInfo.obj << " Bias = " << solutionInfo.bias
-//         << std::endl;
-//
-//    // Count number of support vectors
-//    int nSV = 0;
-//    for(int i = 0; i < prob.l; ++i)
-//    {
-//        if(fabs(solutionInfo.alpha[i]) > 0)
-//            ++nSV;
-//    }
-//
-//    std::cout << "num. of SVs: " << nSV << std::endl;
-//
-//    return solutionInfo;
-//}
+static decisionFunction trainOneSVM(const PREFIX(Problem) *prob, const SVMParameter* param, int* status)
+{
 
+    decisionFunction solutionInfo;
+    solutionInfo.alpha = Malloc(double, prob->l);
+
+    // Initialize the solution
+    for(int i = 0; i < prob->l; ++i)
+        solutionInfo.alpha[i] = 0;
+
+    solutionInfo.bias = 0.0;
+
+    SVMSolver(*prob, *param, solutionInfo);
+
+    std::cout << "obj = " << solutionInfo.obj << " Bias = " << solutionInfo.bias
+         << std::endl;
+
+    // Count number of support vectors
+    int nSV = 0;
+    for(int i = 0; i < prob->l; ++i)
+    {
+        if(fabs(solutionInfo.alpha[i]) > 0)
+            ++nSV;
+    }
+
+    std::cout << "num. of SVs: " << nSV << std::endl;
+
+    return solutionInfo;
+}
+
+} // End of namespace
 
 PREFIX(Model) *PREFIX(Train)(const SVMProblem *prob, const SVMParameter *param, int *status)
 {
@@ -255,277 +355,232 @@ PREFIX(Model) *PREFIX(Train)(const SVMProblem *prob, const SVMParameter *param, 
 
     NAMESPACE::groupClasses(prob, &numClass, &label, &start, &count, perm);
 
-//    // Allocate space for samples with respect to perm
-//    SVMNode** x = new SVMNode*[numSamples];
-//
-//    for(int i = 0; i < numSamples; ++i)
-//        x[i] = prob.x[perm[i]];
-//
-//    // Train k*(k-1)/2 models
-//    bool* nonZero = new bool[numSamples];
-//
-//    for(int i = 0; i < numSamples; ++i)
-//        nonZero[i] = false;
-//
-//    // Allocate space for each model's parameters such as weights and bias
-//    decisionFunction* f = new decisionFunction[numClass*(numClass-1)/2];
-//
-//    int p = 0;
-//    for(int i = 0; i < numClass; ++i)
-//    {
-//        for(int j = i + 1; j < numClass; ++j)
-//        {
-//            SVMProblem subProb; // A sub problem for i-th and j-th class
-//
-//            // start points of i-th and j-th classes
-//            int si = start[i], sj = start[j];
-//            // Number of samples in i-th and j-th class
-//            int ci = count[i], cj = count[j];
-//
-//            // For debugging
-//            //std::cout << "si: " << si << " sj: " << sj << std::endl;
-//            //std::cout << "ci: " << ci << " cj: " << cj << std::endl;
-//
-//            subProb.l = ci + cj;
-//            subProb.x = new SVMNode*[subProb.l];
-//            subProb.y = new double[subProb.l];
-//
-//            // select all the samples of j-th class
-//            for(int k = 0; k < ci;++k)
-//            {
-//                subProb.x[k] = x[si+k];
-//                subProb.y[k] = +1;
-//            }
-//            for(int k = 0; k < cj;++k)
-//            {
-//                subProb.x[ci+k] = x[sj+k];
-//                subProb.y[ci+k] = -1;
-//            }
-//
-//            f[p] = trainOneSVM(subProb, param);
-//
-//            // Count number of support vectors of each class
-//            for(int k = 0; k < ci; ++k)
-//            {
-//                if(!nonZero[si + k] && fabs(f[p].alpha[k]) > 0)
-//                    nonZero[si + k] = true;
-//            }
-//
-//            for(int k = 0; k < cj; ++k)
-//            {
-//                if(!nonZero[sj + k] && fabs(f[p].alpha[ci + k]) > 0)
-//                    nonZero[sj + k] = true;
-//
-//            }
-//
-//            // Free memory!
-//            delete[] subProb.x;
-//            delete[] subProb.y;
-//            ++p;
-//        }
-//    }
-//
-//    // Build model
-//    model->numClass = numClass;
-//    // Copy the labels
-//    model->label = new int[numClass];
-//    for(int i = 0; i < numClass; ++i)
-//        model->label[i] = label[i];
-//
-//    model->bias = new double[numClass * (numClass - 1) / 2];
-//    for(int i = 0; i < numClass * (numClass - 1) / 2; ++i)
-//         model->bias[i] = f[i].bias;
-//
-//    int totalSV = 0;
-//    int* nzCount = new int[numClass];
-//    model->svClass = new int[numClass];
-//
-//    for(int i = 0; i < numClass; ++i)
-//    {
-//        int nSV = 0;
-//        for(int j = 0; j < count[i]; ++j)
-//        {
-//            if(nonZero[start[i] + j])
-//            {
-//                ++nSV;
-//                ++totalSV;
-//            }
-//        }
-//
-//        model->svClass[i] = nSV;
-//        nzCount[i] = nSV;
-//
-//        // For debugging
-//        //std::cout << "Label: " << model->label[i] << " SVs: " <<
-//        //model->svClass[i] << std::endl;
-//    }
-//
-//
-//    std::cout << "Total nSV: " << totalSV << std::endl;
-//
-//    model->numSV = totalSV;
-//    model->SV = new SVMNode*[totalSV];
-//    model->svIndices = new int[totalSV];
-//
-//    p = 0;
-//    for(int i = 0; i < numSamples; ++i)
-//    {
-//        if(nonZero[i])
-//        {
-//            model->SV[p] = x[i];
-//            model->svIndices[p++] = perm[i] + 1;
-//        }
-//    }
-//
-//    int* nzStart = new int[numClass];
-//    nzStart[0] = 0;
-//
-//    for(int i = 1; i < numClass; ++i)
-//        nzStart[i] = nzStart[i - 1] + nzCount[i - 1];
-//
-//    model->svCoef = new double*[numClass - 1];
-//    for(int i = 0; i < numClass - 1; ++i)
-//        model->svCoef[i] = new double[totalSV];
-//
-//    p = 0;
-//    for(int i = 0; i < numClass; ++i)
-//    {
-//        for(int j = i + 1; j < numClass; ++j)
-//        {
-//            // classifier (i,j): coefficients with
-//            // i are in sv_coef[j-1][nz_start[i]...],
-//            // j are in sv_coef[i][nz_start[j]...]
-//
-//            int si = start[i];
-//            int sj = start[j];
-//            int ci = count[i];
-//            int cj = count[j];
-//
-//            int q = nzStart[i];
-//            for(int k = 0; k < ci; ++k)
-//            {
-//                if(nonZero[si + k])
-//                    model->svCoef[j - 1][q++] = f[p].alpha[k];
-//            }
-//
-//            q = nzStart[j];
-//            for(int k = 0; k < cj; ++k)
-//            {
-//                if(nonZero[sj + k])
-//                    model->svCoef[i][q++] = f[p].alpha[ci + k];
-//            }
-//
-//            ++p;
-//        }
-//    }
-//
-//    // Free memory
-//    delete[] label;
-//    delete[] count;
-//    delete[] perm;
-//    delete[] start;
-//    delete[] x;
-//    delete[] nonZero;
-//
-//    // Delete decision functions
-//    for(int i = 0; i < numClass * (numClass - 1) / 2 ; ++i)
-//        delete[] f[i].alpha;
-//
-//    delete[] f;
-//    delete[] nzCount;
-//    delete[] nzStart;
+#ifdef _DENSE_REP
 
+    PREFIX(Node) *x = Malloc(PREFIX(Node), numSamples);
+
+#else
+
+    // Allocate space for samples with respect to perm
+    PREFIX(Node) **x = Malloc(PREFIX(Node), numSamples);
+
+#endif // __DENSE_REP
+
+    for(int i = 0; i < numSamples; ++i)
+        x[i] = prob->x[perm[i]];
+
+    // Train k*(k-1)/2 models
+    bool* nonZero = Malloc(bool, numSamples);
+
+    for(int i = 0; i < numSamples; ++i)
+        nonZero[i] = false;
+
+    // Allocate space for each model's parameters such as weights and bias
+    NAMESPACE::decisionFunction* f = Malloc(NAMESPACE::decisionFunction, numClass*(numClass-1)/2);
+
+    int p = 0;
+    for(int i = 0; i < numClass; ++i)
+    {
+        for(int j = i + 1; j < numClass; ++j)
+        {
+            PREFIX(Problem) subProb; // A sub problem for i-th and j-th class
+
+            // start points of i-th and j-th classes
+            int si = start[i], sj = start[j];
+            // Number of samples in i-th and j-th class
+            int ci = count[i], cj = count[j];
+
+            // For debugging
+            //std::cout << "si: " << si << " sj: " << sj << std::endl;
+            //std::cout << "ci: " << ci << " cj: " << cj << std::endl;
+
+            subProb.l = ci + cj;
+
+#ifdef _DENSE_REP
+
+            subProb.x = Malloc(SVMNode, subProb.l);
+#else
+        subProb.x = Malloc(SVMNode *, subProb.l);
+#endif // _DENSE_REP
+
+            subProb.y = Malloc(double, subProb.l);
+
+            // select all the samples of j-th class
+            for(int k = 0; k < ci;++k)
+            {
+                subProb.x[k] = x[si+k];
+                subProb.y[k] = +1;
+            }
+            for(int k = 0; k < cj;++k)
+            {
+                subProb.x[ci+k] = x[sj+k];
+                subProb.y[ci+k] = -1;
+            }
+
+            f[p] = NAMESPACE::trainOneSVM(&subProb, param, status);
+
+            // Count number of support vectors of each class
+            for(int k = 0; k < ci; ++k)
+            {
+                if(!nonZero[si + k] && fabs(f[p].alpha[k]) > 0)
+                    nonZero[si + k] = true;
+            }
+
+            for(int k = 0; k < cj; ++k)
+            {
+                if(!nonZero[sj + k] && fabs(f[p].alpha[ci + k]) > 0)
+                    nonZero[sj + k] = true;
+
+            }
+
+            // Free memory!
+            free(subProb.x);
+            free(subProb.y);
+            ++p;
+        }
+    }
+
+    // Build model
+    model->numClass = numClass;
+
+    // Copy the labels
+    model->label = Malloc(int, numClass);
+    for(int i = 0; i < numClass; ++i)
+        model->label[i] = label[i];
+
+    model->bias = Malloc(double, numClass * (numClass - 1) / 2);
+    for(int i = 0; i < numClass * (numClass - 1) / 2; ++i)
+         model->bias[i] = f[i].bias;
+
+    int totalSV = 0;
+    int* nzCount = Malloc(int, numClass);
+    model->svClass = Malloc(int, numClass);
+
+    for(int i = 0; i < numClass; ++i)
+    {
+        int nSV = 0;
+        for(int j = 0; j < count[i]; ++j)
+        {
+            if(nonZero[start[i] + j])
+            {
+                ++nSV;
+                ++totalSV;
+            }
+        }
+
+        model->svClass[i] = nSV;
+        nzCount[i] = nSV;
+
+        // For debugging
+        //std::cout << "Label: " << model->label[i] << " SVs: " <<
+        //model->svClass[i] << std::endl;
+    }
+
+
+    std::cout << "Total nSV: " << totalSV << std::endl;
+
+    model->numSV = totalSV;
+
+    model->svIndices = Malloc(int, totalSV);
+
+#ifdef _DENSE_REP
+
+    model->SV = Malloc(SVMNode, totalSV);
+#else
+    model->SV = Malloc(SVMNode *, totalSV);
+#endif // _DENSE_REP
+
+
+    p = 0;
+    for(int i = 0; i < numSamples; ++i)
+    {
+        if(nonZero[i])
+        {
+            model->SV[p] = x[i];
+            model->svIndices[p++] = perm[i] + 1;
+        }
+    }
+
+    int* nzStart = Malloc(int, numClass);
+    nzStart[0] = 0;
+
+    for(int i = 1; i < numClass; ++i)
+        nzStart[i] = nzStart[i - 1] + nzCount[i - 1];
+
+    model->svCoef = Malloc(double *, numClass - 1);
+    for(int i = 0; i < numClass - 1; ++i)
+        model->svCoef[i] = Malloc(double, totalSV);
+
+    p = 0;
+    for(int i = 0; i < numClass; ++i)
+    {
+        for(int j = i + 1; j < numClass; ++j)
+        {
+            // classifier (i,j): coefficients with
+            // i are in sv_coef[j-1][nz_start[i]...],
+            // j are in sv_coef[i][nz_start[j]...]
+
+            int si = start[i];
+            int sj = start[j];
+            int ci = count[i];
+            int cj = count[j];
+
+            int q = nzStart[i];
+            for(int k = 0; k < ci; ++k)
+            {
+                if(nonZero[si + k])
+                    model->svCoef[j - 1][q++] = f[p].alpha[k];
+            }
+
+            q = nzStart[j];
+            for(int k = 0; k < cj; ++k)
+            {
+                if(nonZero[sj + k])
+                    model->svCoef[i][q++] = f[p].alpha[ci + k];
+            }
+
+            ++p;
+        }
+    }
+
+    // Free memory
+    free(label);
+    free(count);
+    free(perm);
+    free(start);
+    free(x);
+    free(nonZero);
+
+    // Delete decision functions
+    for(int i = 0; i < numClass * (numClass - 1) / 2 ; ++i)
+        free(f[i].alpha);
+
+    free(f);
+    free(nzCount);
+    free(nzStart);
+
+    *status = 1;
     std::cout << "Training Finished!!" << std::endl;
 
     return model;
 }
 
+
+const char *PREFIX(CheckParameter)(const SVMParameter *param)
+{
+
+    if(param->gamma < 0)
+        return "gamma < 0. gamma is a positive parameter.";
+
+    if(param->e <= 0 || param->e >= 1)
+        return "Optimizer stopping criteria should be in the interval(0, 1).";
+
+    if(param->C <= 0)
+        return "C <= 0. C penalty parameter should be positive.";
+
+    return NULL;
 }
 
-//void SVMSolver(const SVMProblem& prob, const SVMParameter& para,
-//               decisionFunction& solution)
-//{
-//
-//    // M value is scaled value of C.
-//    double M = para.e * para.C;
-//
-//    // Output vector
-//    std::vector<double> outputVec(prob.l, 0);
-//    int t = 0; // Iterations
-//    // Learn rate
-//    double learnRate;
-//    double B;
-//
-//    // Initialize hinge loss error and worst violator index
-//    unsigned int idxWV = 0;
-//    double yo = prob.y[idxWV] * outputVec[idxWV];
-//    double hingeLoss;
-//
-//    // Indexes
-//    std::vector<size_t> nonSVIdx(prob.l);
-//    std::iota(nonSVIdx.begin(), nonSVIdx.end(), 0);
-//
-//    while(yo < M)
-//    {
-//        ++t;
-//        learnRate = 2 / sqrt(t);
-//
-//        // Remove worst violator from index set
-//        nonSVIdx.erase(std::remove(nonSVIdx.begin(), nonSVIdx.end(), idxWV),
-//                        nonSVIdx.end());
-//
-//        // Calculate
-//        hingeLoss = learnRate * para.C * prob.y[idxWV];
-//
-//        // Calculate bias term
-//        B = hingeLoss / prob.l;
-//
-//        // Update worst violator's alpha value
-//        solution.alpha[idxWV] += hingeLoss;
-//        solution.bias += B;
-//
-//        if (nonSVIdx.size() != 0)
-//        {
-//            outputVec[nonSVIdx[0]] += ((hingeLoss * kernelRBF(prob.x[nonSVIdx[0]],
-//                                      prob.x[idxWV], para.gamma)) + B);
-//
-//            // Suppose that first element of nonSVIdx vector is worst violator sample
-//            unsigned int newIdxWV = nonSVIdx[0];
-//            yo = prob.y[newIdxWV] * outputVec[newIdxWV];
-//
-//            for(size_t idx = 1; idx < nonSVIdx.size(); ++idx)
-//            {
-//                outputVec[nonSVIdx[idx]] += ((hingeLoss * kernelRBF(prob.x[nonSVIdx[idx]],
-//                                            prob.x[idxWV], para.gamma)) + B);
-//
-//                //std::cout << outputVec[nonSVIdx[idx]] << std::endl;
-//
-//                // Find worst violator
-//                if((prob.y[nonSVIdx[idx]] * outputVec[nonSVIdx[idx]]) < yo)
-//                {
-//                    newIdxWV = nonSVIdx[idx];
-//                    yo = prob.y[nonSVIdx[idx]] * outputVec[nonSVIdx[idx]];
-//                }
-//            }
-//
-//            // Found new worst violator sample
-//            idxWV = newIdxWV;
-//
-//            //std::cout << "Worst violator idx: " << idxWV << std::endl;
-//            //std::cout << "M: " << M << "yo: " << yo << std::endl;
-//        }
-//        else
-//        {
-//            break;
-//        }
-//
-//    }
-//
-//    solution.obj = yo;
-//
-//    std::cout << "Iterations: " << t << std::endl;
-//
-//}
 
 
 //double computeVotes(const SVMModel* model, const SVMNode* x, double* decValues)

@@ -5,13 +5,6 @@
 //#include <string>
 
 
-struct SVMSparseNode
-{
-    int index;
-    double value;
-
-};
-
 struct SVMNode
 {
 	int dim;
@@ -62,13 +55,6 @@ struct SVMModel
 };
 
 
-struct decisionFunction
-{
-    double *alpha;
-    double bias;
-    double obj; // Objective value
-};
-
 
 //template <typename T>
 //inline void swapVar(T& x, T& y);
@@ -84,6 +70,8 @@ static void groupClasses(const struct SVMProblem* prob, int* numClass, int** lab
 
 struct SVMModel* SVMTrain(const struct SVMProblem* prob, const struct SVMParameter* param, int* status);
 
+void SVMFreeModel(struct SVMModel **model_ptr_ptr);
+
 //void SVMSolver(const SVMProblem& prob, const SVMParameter& para,
  //              decisionFunction& solution);
 
@@ -96,6 +84,17 @@ struct SVMModel* SVMTrain(const struct SVMProblem* prob, const struct SVMParamet
 
 //void crossValidation(const SVMProblem& prob, SVMParameter& param, int numFolds);
 
+
+/* Sparse version */
+
+struct SVMSparseNode
+{
+    int index;
+    double value;
+
+};
+
+/* End of sparse version */
 
 
 #endif // SVM_H

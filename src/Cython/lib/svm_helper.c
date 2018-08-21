@@ -53,3 +53,93 @@ void setProblem(struct SVMProblem *prob, char *X, char *Y, npy_intp *dims)
 
 }
 
+
+/*
+    Convert from LIBSVM sparse representation and copy into NumPy array
+*/
+void copySvCoef(char *data, struct SVMModel *model)
+{
+    int i , len = model->numClass - 1;
+    double *temp = (double *) data;
+
+    for(i = 0; i < len; ++i)
+    {
+        memcpy(temp, model->svCoef[i], sizeof(double) * model->numSV);
+        temp += model->numSV;
+    }
+}
+
+
+/*
+    Copy Bias from model struct
+*/
+void copyIntercept(char *data, struct SVMModel *model, npy_intp *dims)
+{
+
+    /* intercept = -rho */
+
+    npy_intp i , n = dims[0];
+    double t, *ddata = (double *) data;
+
+    for(i = 0; i < n; ++i)
+    {
+        t = model->bias[i];
+
+        *ddata = (t != 0) ? t : 0;
+        ++ddata;
+    }
+
+}
+
+
+/*
+    Copy indices of SVs from model struct
+*/
+void copySupport(char *data, struct SVMModel *model)
+{
+    memcpy(data, model->svIndices, (model->numSV) * sizeof(int));
+}
+
+
+/*
+    Copy SVs from sparse structures
+*/
+void copySV(char *data, struct SVMModel *model, npy_intp *dims)
+{
+    int i , n = model->numSV;
+    double *tdata = (double *) data;
+    int dim = model->SV[0].dim;
+
+    for(i = 0; i < n; ++i)
+    {
+        memcpy(tdata, model->SV[i].values, dim * sizeof(double));
+        tdata += dim;
+    }
+}
+
+
+/*
+    Copy number SVs for each class from model struct
+*/
+void copySVClass(char *data, struct SVMModel *model)
+{
+    memcpy(data, model->svClass, model->numClass * sizeof(int));
+}
+
+
+/*
+    Get number of support vectors in a model
+*/
+npy_intp getNumSV(struct SVMModel *model)
+{
+    return (npy_intp) model->numSV;
+}
+
+
+/*
+    Get number of classes in a model
+*/
+npy_intp getNumClass(struct SVMModel *model)
+{
+    return (npy_intp) model->numClass;
+}

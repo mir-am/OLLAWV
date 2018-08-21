@@ -12,6 +12,7 @@ Python's wrapper for SVM classifier which is implemented in C++.
 from dataproc import read_data
 from sklearn.model_selection import train_test_split
 import cy_wrap
+import time
 
 class SVM:
     
@@ -33,15 +34,21 @@ class SVM:
                  Tolerance for stopping criterion
         """
         
-        
+        # Parameters
         self.C = C
         self.gamma = gamma
         self.tol = tol
+        
+        # Model
+        self.support_ = self.support_vectors_ = self.n_support_ = self.dual_coef = \
+        self.intercept = self.fit_status_ = None
+        
     
     def fit(self, X_train, y_train):
         
-        cy_wrap.fit(X_train, y_train.astype('float64'), self.C, self.gamma,
-                    self.tol)
+        self.support_, self.support_vectors_, self.n_support_, \
+        self.dual_coef_, self.intercept_, self.fit_status_ = cy_wrap.fit(
+                X_train, y_train.astype('float64'), self.C, self.gamma, self.tol)
     
     def predict(self):
         
@@ -55,6 +62,10 @@ if __name__ == '__main__':
     X_t, X_te, y_tr, y_te = train_test_split(train_data, lables, test_size=0.3,\
                                                     random_state=42)
     
-    model = SVM(1, 1)
+    start_t = time.time()
+    
+    model = SVM(1, 2)
     model.fit(X_t, y_tr)
+
+    print("Finished in %.3f ms" % ((time.time() - start_t) * 1000))
 

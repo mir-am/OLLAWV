@@ -57,8 +57,52 @@ def fit(np.ndarray[np.float64_t, ndim=2, mode='c'] X,
         
         raise ValueError(errorMsg.decode('utf-8'))
 
-#    cdef int fit_status = 0
-#    with nogil:
-#        
-#        model = SVMTrain(&prob, &param, &fit_status)
-
+    cdef int fit_status = 0
+    with nogil:
+        
+        model = SVMTrain(&prob, &param, &fit_status)
+        
+    # Copy the data returned by SVMTrain
+    numSV = getNumSV(model)
+    numClasses = getNumClass(model)
+    
+    print("NumSV: %d, Classes: %d" % (numSV, numClasses))
+    
+    cdef np.ndarray[np.float64_t, ndim=2, mode='c'] svCoef
+    svCoef = np.empty((numClasses - 1, numSV), dtype=np.float64)
+    copySvCoef(svCoef.data, model)
+    
+    print(svCoef.shape[0], svCoef.shape[1])
+    
+    # Copy the intercept (Bias)
+    cdef np.ndarray[np.float64_t, ndim=1, mode='c'] intercept
+    intercept = np.empty(int(numClasses * (numClasses - 1) / 2), dtype=np.float64)
+    copyIntercept(intercept.data, model, intercept.shape)
+    
+    print(intercept)
+    
+    # Indices of SVs
+    cdef np.ndarray[np.int32_t, ndim=1, mode='c'] support
+    support = np.empty(numSV, dtype=np.int32)
+    copySupport(support.data, model)
+    
+    #print(support.shape[0], support.shape[1])
+    
+    # Copy model.SV
+    # Samples that are SVs.
+    cdef np.ndarray[np.float64_t, ndim=2, mode='c'] supportVectors
+    supportVectors = np.empty((numSV, X.shape[1]), dtype=np.float64)
+    copySV(supportVectors.data, model, supportVectors.shape)
+    
+    print(supportVectors.shape[0], supportVectors.shape[1])
+    
+    # Number of SVs for each class
+    cdef np.ndarray[np.int32_t, ndim=1, mode='c'] n_class_SV
+    n_class_SV = np.empty(numClasses, dtype=np.int32)
+    copySVClass(n_class_SV.data, model)
+    
+    print(n_class_SV)
+    
+    return (support, supportVectors, n_class_SV, svCoef, intercept, fit_status)
+    
+    
