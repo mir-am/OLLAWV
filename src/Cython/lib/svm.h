@@ -72,6 +72,8 @@ struct SVMModel* SVMTrain(const struct SVMProblem* prob, const struct SVMParamet
 
 void SVMFreeModel(struct SVMModel **model_ptr_ptr);
 
+void SVMFreeModelContent(struct SVMModel *model_ptr);
+
 //void SVMSolver(const SVMProblem& prob, const SVMParameter& para,
  //              decisionFunction& solution);
 

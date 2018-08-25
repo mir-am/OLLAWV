@@ -46,11 +46,32 @@ class SVM:
     
     def fit(self, X_train, y_train):
         
+        """
+        Given training set, it creates a SVM model
+        
+        Parameters:
+            X_train: Training samples, (n_samples, n_features)
+            y_train: Target values, (n_samples, )
+        """
+        
         self.support_, self.support_vectors_, self.n_support_, \
         self.dual_coef_, self.intercept_, self.fit_status_ = cy_wrap.fit(
                 X_train, y_train.astype('float64'), self.C, self.gamma, self.tol)
     
-    def predict(self):
+    def predict(self, X_test):
+        
+        """
+        Predicits lables of test samples
+        
+        Parameters:
+            X_test: test samples, (n_samples, n_features)
+        
+        Returns:
+            y_pred: array, (n_samples,)
+        
+        """
+        
+        
         
         pass
 
@@ -66,6 +87,7 @@ if __name__ == '__main__':
     
     model = SVM(1, 2)
     model.fit(X_t, y_tr)
+    print(model.dual_coef_.strides)
 
     print("Finished in %.3f ms" % ((time.time() - start_t) * 1000))
 

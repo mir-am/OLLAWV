@@ -55,6 +55,18 @@ void setProblem(struct SVMProblem *prob, char *X, char *Y, npy_intp *dims)
 
 
 /*
+    Create and return an instance of SVMModel
+*/
+struct SVMModel *setModel(struct SVMParameter *param, int nrClass, char *SV, npy_intp *dimSV,
+                          char *support, npy_intp supportDim, npy_intp *stridesSV, char* svCoef,
+                          char* bias, char* nSV)
+{
+
+
+}
+
+
+/*
     Convert from LIBSVM sparse representation and copy into NumPy array
 */
 void copySvCoef(char *data, struct SVMModel *model)

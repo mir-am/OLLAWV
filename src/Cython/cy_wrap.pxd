@@ -30,7 +30,7 @@ cdef extern from "lib/svm.h":
     char* SVMCheckParameter(SVMParameter*);
         
     SVMModel* SVMTrain(SVMProblem*, SVMParameter* , int*) nogil
-    void SVMFreeModel(SVMModell **model_ptr_ptr)
+    void SVMFreeModel(SVMModel **model_ptr_ptr)
         
 
 cdef extern from "lib/svm_helper.c":
@@ -40,6 +40,9 @@ cdef extern from "lib/svm_helper.c":
     void setParameter(SVMParameter*, double, double, double)
     
     void setProblem(SVMProblem* , char*, char*, np.npy_intp *)
+    
+    SVMModel *setModel(SVMParameter *, int, char *, np.npy_intp *, char *,
+                       np.npy_intp *, np.npy_intp *, char *, char *, char *)
     
     void copySvCoef(char *, SVMModel *)
     void copyIntercept(char *, SVMModel *, np.npy_intp *)

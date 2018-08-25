@@ -582,6 +582,63 @@ const char *PREFIX(CheckParameter)(const SVMParameter *param)
 }
 
 
+void PREFIX(FreeModelContent)(PREFIX(Model) *model_ptr)
+{
+    if(model_ptr->freeSV && model_ptr->numSV > 0  && model_ptr->SV != NULL)
+    {
+#ifdef _DENSE_REP
+
+        for(int i = 0; i < model_ptr->numSV; ++i)
+            free(model_ptr->SV[i].values);
+#else
+        free((void *) (model_ptr->SV[0]));
+
+#endif // _DENSE_REP
+
+        if(model_ptr->svCoef)
+        {
+            for(int i = 0; i < model_ptr->numClass - 1; ++i)
+                free(model_ptr->svCoef[i]);
+        }
+
+        free(model_ptr->SV);
+        model_ptr->SV = NULL;
+
+        free(model_ptr->svCoef);
+        model_ptr->svCoef = NULL;
+
+        free(model_ptr->svIndices);
+        model_ptr->svIndices = NULL;
+
+        free(model_ptr->bias);
+        model_ptr->bias = NULL;
+
+        free(model_ptr->label);
+        model_ptr->label = NULL;
+
+        free(model_ptr->svClass);
+        model_ptr->svClass = NULL;
+
+    }
+}
+
+
+void PREFIX(FreeModel)(PREFIX(Model)** model_ptr_ptr)
+{
+    if(model_ptr_ptr != NULL && *model_ptr_ptr != NULL)
+    {
+        PREFIX(FreeModelContent)(*model_ptr_ptr);
+        free(*model_ptr_ptr);
+
+        *model_ptr_ptr = NULL;
+
+        std::cout << "The model successfully destroyed." << std::endl;
+
+    }
+
+}
+
+
 
 //double computeVotes(const SVMModel* model, const SVMNode* x, double* decValues)
 //{
