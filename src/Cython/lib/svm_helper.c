@@ -2,6 +2,9 @@
 #include <numpy/arrayobject.h>
 #include "svm.h"
 
+#define Malloc(type,n) (type *)malloc((n) * sizeof(type))
+
+
 /*
 	Some utility funcions for converting NumPy arrays to LIBSVM structures.
 
@@ -58,10 +61,71 @@ void setProblem(struct SVMProblem *prob, char *X, char *Y, npy_intp *dims)
     Create and return an instance of SVMModel
 */
 struct SVMModel *setModel(struct SVMParameter *param, int nrClass, char *SV, npy_intp *dimSV,
-                          char *support, npy_intp supportDim, npy_intp *stridesSV, char* svCoef,
+                          char *support, npy_intp* supportDim, npy_intp *stridesSV, char* svCoef,
                           char* bias, char* nSV)
 {
+    struct SVMModel *model;
+    double *dsvCoef = (double *) svCoef;
 
+    int i, m;
+
+    m = nrClass * (nrClass -1) / 2;
+
+    if((model = Malloc(struct SVMModel, 1)) == NULL)
+        goto modelError;
+
+    if((model->svClass = Malloc(int, nrClass)) == NULL)
+        goto nsvError;
+
+    if((model->label = Malloc(int, nrClass)) == NULL)
+        goto labelError;
+
+    if((model->svCoef = Malloc(double *, (nrClass - 1))) == NULL)
+        goto svCoefError;
+
+    if((model->bias = Malloc(double, m)) == NULL)
+        goto biasError;
+
+    model->numClass = nrClass;
+    model->param = *param;
+    model->numSV = (int) supportDim[0];
+
+    model->SV = denseToLIBSVM((double *) SV, dimSV);
+
+    memcpy(model->svClass, nSV, model->numClass * sizeof(int));
+
+    printf("SV class copied...");
+
+    for(i = 0; i < model->numClass; ++i)
+        model->label[i];
+
+    for(i = 0; i < model->numClass - 1; ++i)
+        model->svCoef[i] = dsvCoef + i * model->numSV;
+
+    for(i = 0; i < m; ++i)
+        model->bias[i] = ((double *) bias)[i];
+
+    model->freeSV = 0;
+
+    printf("Model created...");
+
+    return model;
+
+    // Handling errors
+    biasError:
+        free(model->svCoef);
+
+    svCoefError:
+        free(model->label);
+
+    labelError:
+        free(model->svClass);
+
+    nsvError:
+        free(model);
+
+    modelError:
+        return NULL;
 
 }
 
@@ -155,3 +219,4 @@ npy_intp getNumClass(struct SVMModel *model)
 {
     return (npy_intp) model->numClass;
 }
+
