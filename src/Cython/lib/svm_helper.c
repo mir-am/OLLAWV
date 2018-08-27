@@ -26,13 +26,14 @@ struct SVMNode* denseToLIBSVM(double *x, npy_intp* dims)
 	if(node == NULL) return NULL;
 	for(i = 0; i < dims[0]; ++i)
 	{
+
 		node[i].values = tx;
 		node[i].dim = (int) len_row;
 		node[i].ind = i;
 
 		tx += len_row;
-	}
 
+	}
 
 	return node;
 
@@ -94,8 +95,6 @@ struct SVMModel *setModel(struct SVMParameter *param, int nrClass, char *SV, npy
 
     memcpy(model->svClass, nSV, model->numClass * sizeof(int));
 
-    printf("SV class copied...");
-
     for(i = 0; i < model->numClass; ++i)
         model->label[i];
 
@@ -103,11 +102,11 @@ struct SVMModel *setModel(struct SVMParameter *param, int nrClass, char *SV, npy
         model->svCoef[i] = dsvCoef + i * model->numSV;
 
     for(i = 0; i < m; ++i)
-        model->bias[i] = ((double *) bias)[i];
+        (model->bias)[i] = ((double *) bias)[i];
 
     model->freeSV = 0;
 
-    printf("Model created...");
+    printf("Model created...\n");
 
     return model;
 
@@ -204,6 +203,36 @@ void copySVClass(char *data, struct SVMModel *model)
 
 
 /*
+    Predict using SVM model
+*/
+int copyPredict(char *predict, struct SVMModel *model, npy_intp *predictDims,
+                char *decValues)
+{
+    double *t = (double *) decValues;
+    struct SVMNode *predictNodes;
+    npy_intp i;
+
+    predictNodes = denseToLIBSVM((double *) predict, predictDims);
+
+    if(predictNodes == NULL)
+        return -1;
+
+    for(i = 0; i < predictDims[0]; ++i)
+    {
+        *t = SVMPredict(model, &predictNodes[i]);
+
+        ++t;
+    }
+
+    free(predictNodes);
+    printf("Predicted....\n");
+
+    return 0;
+
+}
+
+
+/*
     Get number of support vectors in a model
 */
 npy_intp getNumSV(struct SVMModel *model)
@@ -218,5 +247,27 @@ npy_intp getNumSV(struct SVMModel *model)
 npy_intp getNumClass(struct SVMModel *model)
 {
     return (npy_intp) model->numClass;
+}
+
+
+/*
+    Some free rotines
+    Like SVMFreeModel but does not free svCoef
+*/
+int freeModel(struct SVMModel *model)
+{
+    if(model == NULL) return -1;
+
+    free(model->SV);
+
+    // Do not free mode->svIndices, sice it was not created in setModel
+    free(model->svCoef);
+    free(model->bias);
+    free(model->label);
+    free(model->svClass);
+    free(model);
+
+    return 0;
+
 }
 

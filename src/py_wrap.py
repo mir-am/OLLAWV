@@ -71,8 +71,8 @@ class SVM:
         
         """
         
-        cy_wrap.predict(X_test, self.support_, self.support_vectors_,
-                        self.n_support_, self.dual_coef_, self.intercept, self.gamma)
+        return cy_wrap.predict(X_test, self.support_, self.support_vectors_,
+                        self.n_support_, self.dual_coef_, self.intercept_, self.gamma)
         
 
 
@@ -87,7 +87,9 @@ if __name__ == '__main__':
     
     model = SVM(1, 2)
     model.fit(X_t, y_tr)
-    model.predict(X_te)
+    pred = model.predict(X_te)
+    
+    print(pred)
 
     print("Finished in %.3f ms" % ((time.time() - start_t) * 1000))
 

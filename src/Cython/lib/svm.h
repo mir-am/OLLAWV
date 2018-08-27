@@ -80,7 +80,7 @@ void SVMFreeModelContent(struct SVMModel *model_ptr);
 // Multiclass classification, a vote strategy would be used.
 //double computeVotes(const SVMModel* model, const SVMNode* x, double* decValues);
 
-//double SVMPredict(const SVMModel* model, const SVMNode* x);
+double SVMPredict(const struct SVMModel *model, const struct SVMNode *x);
 
 //void predict(std::string testFile, const SVMModel* model);
 

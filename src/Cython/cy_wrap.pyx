@@ -136,7 +136,7 @@ def predict(np.ndarray[np.float64_t, ndim=2, mode='c'] X,
         dec_values: predicted values
     """
     
-    cdef np.ndarray[np.float64_t, ndim=1, mode='c'] dev_values
+    cdef np.ndarray[np.float64_t, ndim=1, mode='c'] dec_values
     cdef SVMParameter param
     cdef SVMModel *model
     cdef int rv
@@ -151,5 +151,22 @@ def predict(np.ndarray[np.float64_t, ndim=2, mode='c'] X,
                      support.shape, sv_coef.strides, sv_coef.data, intercept.data,
                      nSV.data)
     
-
+    try:
+        
+        dec_values = np.empty(X.shape[0])
+        
+        with nogil:
+            
+            rv = copyPredict(X.data, model, X.shape, dec_values.data)
+            
+        if rv < 0:
+                
+            raise MemoryError("Ran out of memory!")
+                
+    finally:
+        
+        
+        freeModel(model)
+        
+    return dec_values
 

@@ -639,91 +639,99 @@ void PREFIX(FreeModel)(PREFIX(Model)** model_ptr_ptr)
 }
 
 
+double PREFIX(computeVotes) (const PREFIX(Model) *model, const PREFIX(Node) *x, double *decValues)
+{
+    int numClasses = model->numClass;
+    int numSamples = model->numSV;
 
-//double computeVotes(const SVMModel* model, const SVMNode* x, double* decValues)
-//{
-//    int numClasses = model->numClass;
-//    int numSamples = model->numSV;
-//
-//    // Kernel values
-//    double* kValue = new double[numSamples];
-//
-//    for(int i = 0; i < numSamples; ++i)
-//        kValue[i] = kernelRBF(x, model->SV[i], model->param.gamma);
-//
-//    int* start = new int[numClasses];
-//    start[0] = 0;
-//    for(int i = 1; i < numClasses; ++i)
-//        start[i] = start[i - 1] + model->svClass[i - 1];
-//
-//    // Initialize votes
-//    int* vote = new int[numClasses];
-//    for(int i = 0; i < numClasses; ++i)
-//        vote[i] = 0;
-//
-//    int p = 0;
-//    for(int i = 0; i < numClasses; ++i)
-//        for(int j = i + 1; j < numClasses; ++j)
-//        {
-//            double sum = 0;
-//            int si = start[i];
-//            int sj = start[j];
-//            int ci = model->svClass[i];
-//            int cj = model->svClass[j];
-//
-//            double* coef1 = model->svCoef[j - 1];
-//            double* coef2 = model->svCoef[i];
-//
-//            for(int k = 0; k < ci; ++k)
-//                sum += coef1[si + k] * kValue[si + k];
-//
-//            for(int k = 0; k < cj; ++k)
-//                sum += coef2[sj + k] * kValue[sj + k];
-//
-//            // Bias
-//            sum -= model->bias[p];
-//            decValues[p] = sum;
-//
-//            if(decValues[p] > 0)
-//                ++vote[i];
-//            else
-//                ++vote[j];
-//
-//            // For debugging purpose
-//            //std::cout << "Vote " << vote[i] << " |Vote " << vote[j] << std::endl;
-//
-//            p++;
-//        }
-//
-//    int voteMaxIdx = 0;
-//    for(int i = 1; i < numClasses; ++i)
-//        if(vote[i] > vote[voteMaxIdx])
-//            voteMaxIdx = i;
-//
-//    //std::cout << "VoteMax: " << voteMaxIdx << std::endl;
-//    //std::cout << "Predicted label: " << model->label[voteMaxIdx] << std::endl;
-//
-//    delete[] kValue;
-//    delete[] start;
-//    delete[] vote;
-//
-//    return model->label[voteMaxIdx];
-//}
+    // Kernel values
+    double* kValue = Malloc(double, numSamples);
+
+    for(int i = 0; i < numSamples; ++i)
+
+#ifdef _DENSE_REP
+
+        kValue[i] = NAMESPACE::kernelRBF(x, model->SV + i, model->param.gamma);
+#else
+
+        kValue[i] = NAMESPACE::kernelRBF(x, model->SV[i], model->param.gamma);
+
+#endif // _DENSE_REP
 
 
-//double SVMPredict(const SVMModel* model, const SVMNode* x)
-//{
-//    int numClass = model->numClass;
-//    double* decValues;
-//
-//    decValues = new double[numClass * (numClass - 1) / 2];
-//
-//    double predResult = computeVotes(model, x, decValues);
-//
-//    delete[] decValues;
-//
-//    return predResult;
-//}
+    int* start = Malloc(int, numClasses);
+    start[0] = 0;
+    for(int i = 1; i < numClasses; ++i)
+        start[i] = start[i - 1] + model->svClass[i - 1];
+
+    // Initialize votes
+    int* vote = Malloc(int, numClasses);
+    for(int i = 0; i < numClasses; ++i)
+        vote[i] = 0;
+
+    int p = 0;
+    for(int i = 0; i < numClasses; ++i)
+        for(int j = i + 1; j < numClasses; ++j)
+        {
+            double sum = 0;
+            int si = start[i];
+            int sj = start[j];
+            int ci = model->svClass[i];
+            int cj = model->svClass[j];
+
+            double* coef1 = model->svCoef[j - 1];
+            double* coef2 = model->svCoef[i];
+
+            for(int k = 0; k < ci; ++k)
+                sum += coef1[si + k] * kValue[si + k];
+
+            for(int k = 0; k < cj; ++k)
+                sum += coef2[sj + k] * kValue[sj + k];
+
+            // Bias
+            sum -= model->bias[p];
+            decValues[p] = sum;
+
+            if(decValues[p] > 0)
+                ++vote[i];
+            else
+                ++vote[j];
+
+            // For debugging purpose
+            //std::cout << "Vote " << vote[i] << " |Vote " << vote[j] << std::endl;
+
+            p++;
+        }
+
+    int voteMaxIdx = 0;
+    for(int i = 1; i < numClasses; ++i)
+        if(vote[i] > vote[voteMaxIdx])
+            voteMaxIdx = i;
+
+    //std::cout << "VoteMax: " << voteMaxIdx << std::endl;
+    //std::cout << "Predicted label: " << model->label[voteMaxIdx] << std::endl;
+
+    free(kValue);
+    free(start);
+    free(vote);
+
+    return model->label[voteMaxIdx];
+}
+
+
+double PREFIX(Predict)(const PREFIX(Model) *model, const PREFIX(Node) *x)
+{
+    int numClass = model->numClass;
+    double* decValues;
+
+    decValues = Malloc(double, numClass * (numClass - 1) / 2);
+
+    double predResult = PREFIX(computeVotes)(model, x, decValues);
+
+    free(decValues);
+
+    return predResult;
+}
 
 
 //void predict(std::string testFile, const SVMModel* model)

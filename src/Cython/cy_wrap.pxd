@@ -44,6 +44,8 @@ cdef extern from "lib/svm_helper.c":
     SVMModel *setModel(SVMParameter *, int, char *, np.npy_intp *, char *,
                        np.npy_intp *, np.npy_intp *, char *, char *, char *)
     
+
+    int copyPredict(char *, SVMModel *, np.npy_intp *, char *) nogil    
     void copySvCoef(char *, SVMModel *)
     void copyIntercept(char *, SVMModel *, np.npy_intp *)
     void copySupport(char *, SVMModel *)
@@ -52,6 +54,8 @@ cdef extern from "lib/svm_helper.c":
     
     np.npy_intp getNumSV(SVMModel *)
     np.npy_intp getNumClass(SVMModel *)
+    
+    int freeModel(SVMModel *)
     
     
     
