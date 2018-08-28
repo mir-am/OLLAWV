@@ -1,6 +1,8 @@
 #include <stdlib.h>
 #include <numpy/arrayobject.h>
+
 #include "svm.h"
+
 
 #define Malloc(type,n) (type *)malloc((n) * sizeof(type))
 
@@ -96,7 +98,7 @@ struct SVMModel *setModel(struct SVMParameter *param, int nrClass, char *SV, npy
     memcpy(model->svClass, nSV, model->numClass * sizeof(int));
 
     for(i = 0; i < model->numClass; ++i)
-        model->label[i];
+        model->label[i] = i;
 
     for(i = 0; i < model->numClass - 1; ++i)
         model->svCoef[i] = dsvCoef + i * model->numSV;

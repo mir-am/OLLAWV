@@ -11,8 +11,11 @@ Python's wrapper for SVM classifier which is implemented in C++.
 
 from dataproc import read_data
 from sklearn.model_selection import train_test_split
+from sklearn.metrics import accuracy_score
+import numpy as np
 import cy_wrap
 import time
+
 
 class SVM:
     
@@ -41,7 +44,18 @@ class SVM:
         
         # Model
         self.support_ = self.support_vectors_ = self.n_support_ = self.dual_coef = \
-        self.intercept = self.fit_status_ = None
+        self.intercept = self.fit_status_ = self.classes_ = None
+        
+        
+    def _validate_targets(self, labels):
+    
+        """
+        Validates labels for training and testing classifier
+        """
+        
+        self.classes_, y = np.unique(labels, return_inverse=True)
+        
+        return np.asarray(y, dtype=np.float64, order='C')
         
     
     def fit(self, X_train, y_train):
@@ -54,9 +68,11 @@ class SVM:
             y_train: Target values, (n_samples, )
         """
         
+        y = self._validate_targets(y_train)
+        
         self.support_, self.support_vectors_, self.n_support_, \
         self.dual_coef_, self.intercept_, self.fit_status_ = cy_wrap.fit(
-                X_train, y_train.astype('float64'), self.C, self.gamma, self.tol)
+                X_train, y, self.C, self.gamma, self.tol)
     
     def predict(self, X_test):
         
@@ -71,25 +87,29 @@ class SVM:
         
         """
         
-        return cy_wrap.predict(X_test, self.support_, self.support_vectors_,
+        y = cy_wrap.predict(X_test, self.support_, self.support_vectors_,
                         self.n_support_, self.dual_coef_, self.intercept_, self.gamma)
         
+        return self.classes_.take(np.asarray(y, dtype=np.intp))
+        #return np.asarray(y, dtype=np.intp)
 
 
 if __name__ == '__main__':
     
-    train_data, lables, file_name = read_data('../dataset/pima-indian.csv')
+    train_data, lables, file_name = read_data('../dataset/checkerboard.csv')
     
-    X_t, X_te, y_tr, y_te = train_test_split(train_data, lables, test_size=0.3,\
+    X_t, X_te, y_tr, y_te = train_test_split(train_data, lables, test_size=0.2,\
                                                     random_state=42)
     
     start_t = time.time()
     
-    model = SVM(1, 2)
+    model = SVM(2.0, 0.5)
     model.fit(X_t, y_tr)
     pred = model.predict(X_te)
     
     print(pred)
-
+    
+    print("Accuracy: %.2f" % (accuracy_score(y_te, pred) * 100))
+    
     print("Finished in %.3f ms" % ((time.time() - start_t) * 1000))
 

@@ -124,7 +124,7 @@ static double kernelRBF(const PREFIX(Node) *x, const PREFIX(Node) *y, const doub
     return exp(-gamma * sum);
 }
 
-static void SVMSolver(const SVMProblem& prob, const SVMParameter& para,
+static void SVMSolver(const PREFIX(Problem)& prob, const SVMParameter& para,
                decisionFunction& solution)
 {
 
@@ -168,8 +168,17 @@ static void SVMSolver(const SVMProblem& prob, const SVMParameter& para,
 
         if (nonSVIdx.size() != 0)
         {
+
+#ifdef _DENSE_REP
             outputVec[nonSVIdx[0]] += ((hingeLoss * kernelRBF(&prob.x[nonSVIdx[0]],
                                       &prob.x[idxWV], para.gamma)) + B);
+
+#else
+
+            outputVec[nonSVIdx[0]] += ((hingeLoss * kernelRBF(prob.x[nonSVIdx[0]],
+                                      prob.x[idxWV], para.gamma)) + B);
+
+#endif // _DENSE_REP
 
             // Suppose that first element of nonSVIdx vector is worst violator sample
             unsigned int newIdxWV = nonSVIdx[0];
@@ -319,7 +328,7 @@ static decisionFunction trainOneSVM(const PREFIX(Problem) *prob, const SVMParame
 
     solutionInfo.bias = 0.0;
 
-    SVMSolver(*prob, *param, solutionInfo);
+    PREFIX(Solver)(*prob, *param, solutionInfo);
 
     std::cout << "obj = " << solutionInfo.obj << " Bias = " << solutionInfo.bias
          << std::endl;

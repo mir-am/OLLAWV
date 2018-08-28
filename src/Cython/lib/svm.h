@@ -1,7 +1,10 @@
 #ifndef SVM_H
 #define SVM_H
 
-
+#ifdef __cplusplus
+#pragma compiling with C++ compiler
+extern "C" {
+#endif
 //#include <string>
 
 
@@ -96,7 +99,41 @@ struct SVMSparseNode
 
 };
 
+
+struct SVMSparseProblem
+{
+    int l;
+    double *y;
+    struct SVMSparseNode **x;
+
+};
+
+
+struct SVMSparseModel
+{
+    struct SVMParameter param;
+    int numClass;
+    int *label; // Label of each class
+
+    int numSV; // total SupportVectors
+    struct SVMNode **SV;
+    double **svCoef; // coefficients for SVs in decision function
+    int *svIndices;
+    int *svClass; // Number of SVs for each class
+
+    double *bias;
+
+
+    int freeSV; // 1 if SVMModel created by SVMLoadModel
+                // 0 if SVMModel created by trainSVM
+
+};
+
 /* End of sparse version */
+
+#ifdef __cplusplus
+}
+#endif
 
 
 #endif // SVM_H

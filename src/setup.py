@@ -51,6 +51,8 @@ import numpy as np
 #    return config
 
 
+# join('Cython', 'lib', 'svm_template.cpp')
+
 if __name__ == '__main__':
     
     #from numpy.distutils.core import setup
@@ -65,7 +67,6 @@ if __name__ == '__main__':
               'cy_wrap',
               language='c++',
               sources=[join('Cython', 'cy_wrap.pyx'),
-                       join('Cython', 'lib', 'svm.cpp'),
                        join('Cython', 'lib', 'svm_template.cpp'),
                        join('Cython', 'lib', 'svm_helper.c')],
              extra_compile_args=['-std=c++11']
