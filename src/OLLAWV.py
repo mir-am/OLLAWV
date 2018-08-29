@@ -181,11 +181,11 @@ class OLLAWV:
                 
                 break
 
-            #print(yo)
+        print("Iter: %d, Obj: %f, bias: %f" % (t, yo, self.bias))
     
     def predict(self, X_test):
 
-        print("Percentage of Support Vectors: %.2f" % ((np.count_nonzero(self.alpha) / self.alpha.shape[0])*100))
+        #print("Percentage of Support Vectors: %.2f" % ((np.count_nonzero(self.alpha) / self.alpha.shape[0])*100))
 
         pre_labels = np.zeros((X_test.shape[0]), dtype=np.int)
         # Get indices of SVs
@@ -304,26 +304,28 @@ def grid_search(data_train, data_labels, c_l_bound, c_u_bound, rbf_lbound, \
 # Test
 #c = 4 ** -2
 #y = 4 ** -5
-train_data, lables, filename = read_data('../dataset/titanic.csv')
-#X_t, X_te, y_tr, y_te = train_test_split(train_data, lables, test_size=0.2,\
-#                                                    random_state=42)
+train_data, lables, filename = read_data('../dataset/checkerboard.csv')
+X_t, X_te, y_tr, y_te = train_test_split(train_data, lables, test_size=0.2,\
+                                                    random_state=42)
 #
 start_t = time.time()
 #
-#svm_1 = OLLAWV(c, y)
-#svm_1.fit(X_t, y_tr)
-#result = svm_1.predict(X_te)
+svm_1 = OLLAWV(2.0, 0.5)
+svm_1.fit(X_t, y_tr)
+result = svm_1.predict(X_te)
+
+print("Finished in %.2f sec" % ((time.time() - start_t)))
 
 #cv_test = cv_svm_nl(train_data, lables, 5, c, y)
 
-#a = svm_1.alpha
+a = svm_1.alpha
 #b = svm_1.bias
 
 
 #print("CV acc: %.2f " % cv_test)
-#print('percent of support vectors: %.2f' % ((np.count_nonzero(a) / a.shape[0])*100))
-#print("Accuracy: %.2f" % (accuracy_score(y_te, result) * 100))
+print('percent of support vectors: %d' % np.count_nonzero(a))
+print("Accuracy: %.2f" % (accuracy_score(y_te, result) * 100))
 
-grid_search(train_data, lables, -2, 5, -5, 2)
+#grid_search(train_data, lables, -2, 5, -5, 2)
 
-print("Finished in %.2f sec" % ((time.time() - start_t)))
+

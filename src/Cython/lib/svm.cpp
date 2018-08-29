@@ -328,7 +328,7 @@ static decisionFunction trainOneSVM(const PREFIX(Problem) *prob, const SVMParame
 
     solutionInfo.bias = 0.0;
 
-    PREFIX(Solver)(*prob, *param, solutionInfo);
+    SVMSolver(*prob, *param, solutionInfo);
 
     std::cout << "obj = " << solutionInfo.obj << " Bias = " << solutionInfo.bias
          << std::endl;
@@ -350,6 +350,9 @@ static decisionFunction trainOneSVM(const PREFIX(Problem) *prob, const SVMParame
 
 PREFIX(Model) *PREFIX(Train)(const SVMProblem *prob, const SVMParameter *param, int *status)
 {
+
+    std::cout << "Training started... | C: " << param->C << " Gamma: " << param->gamma << std::endl;
+
     // Classification
     PREFIX(Model)* model = Malloc(PREFIX(Model), 1);
     model->param = *param;

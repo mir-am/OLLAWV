@@ -23,10 +23,13 @@ class SVM:
     Implementaion of Support Vector Machines using OLLAWV algorithm
     """
     
-    def __init__(self, C=1.0, gamma=1.0, tol=0.1):
+    def __init__(self, kernel='RBF', C=1.0, gamma=1.0, tol=0.1):
         
         """
         Parameters:
+            
+            kernel: Kernel function. Currenty, only RBF is supported.
+            
             C: float, (default=1.0)
                Penalty parameter
                
@@ -38,13 +41,30 @@ class SVM:
         """
         
         # Parameters
+        self.kernel = kernel
         self.C = C
         self.gamma = gamma
         self.tol = tol
         
+        self.cl_name = "SVM"
+        
         # Model
-        self.support_ = self.support_vectors_ = self.n_support_ = self.dual_coef = \
+        self.support_ = self.support_vectors_ = self.n_support_ = self.dual_coef_ = \
         self.intercept = self.fit_status_ = self.classes_ = None
+        
+    def set_parameter(self, C, gamma):
+        
+        """
+        It changes the parametes for SVM classifier.
+        DO NOT USE THIS METHOD AFTER INSTANTIATION OF SVM CLASS!
+        THIS METHOD CREATED ONLY FOR Validator CLASS.
+        Input:
+            C: Penalty parameter
+            gamma: RBF function parameter
+        """
+
+        self.C = C
+        self.gamma = gamma
         
         
     def _validate_targets(self, labels):
@@ -103,7 +123,7 @@ if __name__ == '__main__':
     
     start_t = time.time()
     
-    model = SVM(2.0, 0.5)
+    model = SVM('RBF', 2.0, 0.5)
     model.fit(X_t, y_tr)
     pred = model.predict(X_te)
     
