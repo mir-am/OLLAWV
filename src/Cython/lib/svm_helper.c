@@ -16,10 +16,12 @@
 struct SVMNode* denseToLIBSVM(double *x, npy_intp* dims)
 {
 	struct SVMNode *node;
+
 	npy_intp len_row = dims[1];
-	npy_intp len_col = dims[0];
+    npy_intp len_col = dims[0];
+
     double *tx = x;
-	int i;
+	int i, j;
 
 	printf("Row: %d, Col: %d\n", (int) len_row, (int) len_col);
 
@@ -38,7 +40,6 @@ struct SVMNode* denseToLIBSVM(double *x, npy_intp* dims)
 	}
 
 	return node;
-
 }
 
 

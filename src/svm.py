@@ -90,6 +90,9 @@ class SVM:
         
         y = self._validate_targets(y_train)
         
+        print("First row: ", X_train[0, :])
+        print("Last row: ", X_train[-1, :])
+        
         self.support_, self.support_vectors_, self.n_support_, \
         self.dual_coef_, self.intercept_, self.fit_status_ = cy_wrap.fit(
                 X_train, y, self.C, self.gamma, self.tol)

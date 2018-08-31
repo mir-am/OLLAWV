@@ -7,6 +7,7 @@
 #include <numeric>
 #include <algorithm>
 #include <math.h>
+#include "misc.h"
 //#include "FileReader.h"
 
 
@@ -123,6 +124,7 @@ static double kernelRBF(const PREFIX(Node) *x, const PREFIX(Node) *y, const doub
 
     return exp(-gamma * sum);
 }
+
 
 static void SVMSolver(const PREFIX(Problem)& prob, const SVMParameter& para,
                decisionFunction& solution)
@@ -352,6 +354,9 @@ PREFIX(Model) *PREFIX(Train)(const SVMProblem *prob, const SVMParameter *param, 
 {
 
     std::cout << "Training started... | C: " << param->C << " Gamma: " << param->gamma << std::endl;
+
+    // Print elements
+    printData(prob->x, prob->l);
 
     // Classification
     PREFIX(Model)* model = Malloc(PREFIX(Model), 1);
