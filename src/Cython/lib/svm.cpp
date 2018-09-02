@@ -232,10 +232,11 @@ static void groupClasses(const PREFIX(Problem) *prob, int* numClass, int** label
     int* countLables = Malloc(int, maxNumClass);
     int* dataLabel = Malloc(int, l);
 
-    for(int i = 0; i < l; ++i)
+    int i, j thisLabel, thisCount;
+
+    for(i = 0; i < l; ++i)
     {
-        int thisLabel = (int) prob->y[i];
-        int j;
+        thisLabel = (int) prob->y[i];
 
         for(j = 0; j < nrClass; ++j)
         {
@@ -271,20 +272,40 @@ static void groupClasses(const PREFIX(Problem) *prob, int* numClass, int** label
 
     //std::cout << "0: " << countLables[0] << "| 1:" << countLables[1] << std::endl;
 
-    // For binary classification, we need to swap labels
-    if(nrClass == 2 && label[0] == -1 && label[1] == 1)
-    {
-        swapVar(label[0], label[1]);
-        swapVar(countLables[0], countLables[1]);
+//    // For binary classification, we need to swap labels
+//    if(nrClass == 2 && label[0] == -1 && label[1] == 1)
+//    {
+//        swapVar(label[0], label[1]);
+//        swapVar(countLables[0], countLables[1]);
+//
+//        for(int i = 0; i < l; ++i)
+//        {
+//            if(dataLabel[i] == 0)
+//                dataLabel[i] = 1;
+//            else
+//                dataLabel[i] = 0;
+//        }
+//    }
 
-        for(int i = 0; i < l; ++i)
+    // Sort labels by straight insertion
+    for(j = 1; j < nrClass; ++j)
+    {
+        i = j - 1;
+        thisLabel = label[j];
+        thisCount = count[j];
+
+        while(i >=0 && label[i] > thisLabel)
         {
-            if(dataLabel[i] == 0)
-                dataLabel[i] = 1;
-            else
-                dataLabel[i] = 0;
+            label[i + 1] = label[i];
+            count[i + 1] = count[i];
+            i--;
         }
+
+        label[i + 1] = thisLabel;
+        count[i + 1] = thisCount;
+
     }
+
 
     int* start = Malloc(int, nrClass);
     start[0] = 0;
@@ -355,8 +376,8 @@ PREFIX(Model) *PREFIX(Train)(const SVMProblem *prob, const SVMParameter *param, 
 
     std::cout << "Training started... | C: " << param->C << " Gamma: " << param->gamma << std::endl;
 
-    // Print elements
-    printData(prob->x, prob->l);
+    // Print elements - FOR DEBUGGING PURPOSE
+    //printData(prob->x, prob->l);
 
     // Classification
     PREFIX(Model)* model = Malloc(PREFIX(Model), 1);

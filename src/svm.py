@@ -90,8 +90,8 @@ class SVM:
         
         y = self._validate_targets(y_train)
         
-        print("First row: ", X_train[0, :])
-        print("Last row: ", X_train[-1, :])
+        #print("First row: ", X_train[0, :])
+        #print("Last row: ", X_train[-1, :])
         
         self.support_, self.support_vectors_, self.n_support_, \
         self.dual_coef_, self.intercept_, self.fit_status_ = cy_wrap.fit(
@@ -119,14 +119,14 @@ class SVM:
 
 if __name__ == '__main__':
     
-    train_data, lables, file_name = read_data('../dataset/checkerboard.csv')
+    train_data, lables, file_name = read_data('../dataset/iris.csv')
     
-    X_t, X_te, y_tr, y_te = train_test_split(train_data, lables, test_size=0.2,\
+    X_t, X_te, y_tr, y_te = train_test_split(train_data, lables, test_size=0.3,\
                                                     random_state=42)
     
     start_t = time.time()
     
-    model = SVM('RBF', 2.0, 0.5)
+    model = SVM('RBF', 0.25, 0.1)
     model.fit(X_t, y_tr)
     pred = model.predict(X_te)
     
