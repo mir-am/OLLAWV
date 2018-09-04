@@ -126,7 +126,7 @@ if __name__ == '__main__':
     
     start_t = time.time()
     
-    model = SVM('RBF', 0.25, 0.1)
+    model = SVM('RBF', 1, 0.25)
     model.fit(X_t, y_tr)
     pred = model.predict(X_te)
     

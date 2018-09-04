@@ -232,8 +232,10 @@ static void groupClasses(const PREFIX(Problem) *prob, int* numClass, int** label
     int* countLables = Malloc(int, maxNumClass);
     int* dataLabel = Malloc(int, l);
 
-    int i, j thisLabel, thisCount;
+    int i, j, thisLabel, thisCount;
 
+    // Count number of samples of each class.
+    // Also it stores class labels.
     for(i = 0; i < l; ++i)
     {
         thisLabel = (int) prob->y[i];
@@ -247,7 +249,7 @@ static void groupClasses(const PREFIX(Problem) *prob, int* numClass, int** label
             }
         }
 
-        dataLabel[i] = j;
+        //dataLabel[i] = j;
 
 //        std::cout << "a-label: " << dataLabel[i] << " r-label: " << thisLabel
 //         << std::endl;
@@ -270,7 +272,14 @@ static void groupClasses(const PREFIX(Problem) *prob, int* numClass, int** label
         }
     }
 
-    //std::cout << "0: " << countLables[0] << "| 1:" << countLables[1] << std::endl;
+    // FOR DEBUGGING Purpose
+    for(j = 0; j < nrClass; ++j)
+    {
+        std::cout << "Label: " << label[j] << " | Count: " << countLables[j] << std::endl;
+    }
+
+
+
 
 //    // For binary classification, we need to swap labels
 //    if(nrClass == 2 && label[0] == -1 && label[1] == 1)
@@ -292,17 +301,30 @@ static void groupClasses(const PREFIX(Problem) *prob, int* numClass, int** label
     {
         i = j - 1;
         thisLabel = label[j];
-        thisCount = count[j];
+        thisCount = countLables[j];
 
         while(i >=0 && label[i] > thisLabel)
         {
             label[i + 1] = label[i];
-            count[i + 1] = count[i];
+            countLables[i + 1] = countLables[i];
             i--;
         }
 
         label[i + 1] = thisLabel;
-        count[i + 1] = thisCount;
+        countLables[i + 1] = thisCount;
+
+    }
+
+    for(i = 0; i < l; ++i)
+    {
+        j = 0;
+        thisLabel = (int) prob->y[i];
+
+        while(thisLabel != label[j])
+        {
+            j++;
+        }
+        dataLabel[i] = j;
 
     }
 
@@ -310,22 +332,27 @@ static void groupClasses(const PREFIX(Problem) *prob, int* numClass, int** label
     int* start = Malloc(int, nrClass);
     start[0] = 0;
 
-    for(int i = 1; i < nrClass; ++i)
+    for(i = 1; i < nrClass; ++i)
         start[i] = start[i-1] + countLables[i-1];
 
-    for(int i = 0; i < l; ++i)
+    // Store indices of samples in perm for grouping classes.
+    for(i = 0; i < l; ++i)
     {
         perm[start[dataLabel[i]]] = i;
 
 //        std::cout << "Org place: " << i << " Label: " << dataLabel[i]
-//        << " perm" <<"["<< start[dataLabel[i]] << "]:" << i << std::endl;
+//        << " perm" <<"["<< start[dataLabel[i]] << "]: " << i << std::endl;
 
         ++start[dataLabel[i]];
     }
 
+    // For Debugging
+//    for(i = 0; i < l; ++i)
+//        std::cout << "Label of perm[" << i << "]: " << prob->y[perm[i]] << std::endl;
+
     // Reset
     start[0] = 0;
-    for(int i = 1; i < nrClass; ++i)
+    for(i = 1; i < nrClass; ++i)
         start[i] = start[i-1] + countLables[i-1];
 
     *numClass = nrClass;

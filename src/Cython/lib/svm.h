@@ -66,8 +66,8 @@ const char *SVMCheckParameter(const struct SVMParameter *param);
 
 //double kernelRBF(const SVMNode *x, const SVMNode *y, const double& gamma);
 
-static void groupClasses(const struct SVMProblem* prob, int* numClass, int** label_ret,
-                          int** strat_ret, int** count_ret, int* perm);
+//static void groupClasses(const struct SVMProblem* prob, int* numClass, int** label_ret,
+//                          int** strat_ret, int** count_ret, int* perm);
 
 //decisionFunction trainOneSVM(const SVMProblem& prob, const SVMParameter& param);
 
