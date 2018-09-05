@@ -133,7 +133,7 @@ class OLLAWV:
         # Initialize hinge loss error and worst-violator index
         wv = 0
         yo = y_train[wv] * output_vec[wv]
-
+        
         # Indexes
         non_sv_idx = list(range(0, self.X_train.shape[0])) 
 
@@ -141,6 +141,7 @@ class OLLAWV:
 
             t = t + 1
             learn_rate = 2 / np.sqrt(t)
+            print("Worst violator index: ", wv, " | Output: ", output_vec[wv])
             non_sv_idx.remove(wv) # Save index of worst violator
 
             # Calculate hingeloss update
@@ -310,7 +311,7 @@ X_t, X_te, y_tr, y_te = train_test_split(train_data, lables, test_size=0.2,\
 #
 start_t = time.time()
 #
-svm_1 = OLLAWV(2.0, 0.5)
+svm_1 = OLLAWV(4, 0.125)
 svm_1.fit(X_t, y_tr)
 result = svm_1.predict(X_te)
 

@@ -90,6 +90,7 @@ class SVM:
         
         y = self._validate_targets(y_train)
         
+        #print(y)
         #print("First row: ", X_train[0, :])
         #print("Last row: ", X_train[-1, :])
         
@@ -119,20 +120,23 @@ class SVM:
 
 if __name__ == '__main__':
     
-    train_data, lables, file_name = read_data('../dataset/iris.csv')
+    train_data, lables, file_name = read_data('../dataset/checkerboard.csv')
     
-    X_t, X_te, y_tr, y_te = train_test_split(train_data, lables, test_size=0.3,\
+    X_t, X_te, y_tr, y_te = train_test_split(train_data, lables, test_size=0.2,\
                                                     random_state=42)
     
     start_t = time.time()
     
-    model = SVM('RBF', 1, 0.25)
+    model = SVM('RBF', 4, 0.125)
     model.fit(X_t, y_tr)
     pred = model.predict(X_te)
+    pred_train = model.predict(X_t)
     
-    print(pred)
+    print("Targets: \n", y_te)
+    print("Predictions: \n", pred)
     
-    print("Accuracy: %.2f" % (accuracy_score(y_te, pred) * 100))
+    print("Test Accuracy: %.2f" % (accuracy_score(y_te, pred) * 100))
+    print("Training Accuracy: %.2f" % (accuracy_score(y_tr, pred_train) * 100))
     
     print("Finished in %.3f ms" % ((time.time() - start_t) * 1000))
 

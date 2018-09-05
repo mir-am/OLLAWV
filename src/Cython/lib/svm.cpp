@@ -154,6 +154,7 @@ static void SVMSolver(const PREFIX(Problem)& prob, const SVMParameter& para,
         ++t;
         learnRate = 2 / sqrt(t);
 
+        std::cout << "Worst violator index: " << idxWV << " | Output: " << outputVec[idxWV] << std::endl;
         // Remove worst violator from index set
         nonSVIdx.erase(std::remove(nonSVIdx.begin(), nonSVIdx.end(), idxWV),
                         nonSVIdx.end());
@@ -272,11 +273,11 @@ static void groupClasses(const PREFIX(Problem) *prob, int* numClass, int** label
         }
     }
 
-    // FOR DEBUGGING Purpose
-    for(j = 0; j < nrClass; ++j)
-    {
-        std::cout << "Label: " << label[j] << " | Count: " << countLables[j] << std::endl;
-    }
+     // FOR DEBUGGING Purpose
+//    for(j = 0; j < nrClass; ++j)
+//    {
+//        std::cout << "Label: " << label[j] << " | Count: " << countLables[j] << std::endl;
+//    }
 
 
 
@@ -448,6 +449,7 @@ PREFIX(Model) *PREFIX(Train)(const SVMProblem *prob, const SVMParameter *param, 
     {
         for(int j = i + 1; j < numClass; ++j)
         {
+
             PREFIX(Problem) subProb; // A sub problem for i-th and j-th class
 
             // start points of i-th and j-th classes
@@ -465,7 +467,7 @@ PREFIX(Model) *PREFIX(Train)(const SVMProblem *prob, const SVMParameter *param, 
 
             subProb.x = Malloc(SVMNode, subProb.l);
 #else
-        subProb.x = Malloc(SVMNode *, subProb.l);
+            subProb.x = Malloc(SVMNode *, subProb.l);
 #endif // _DENSE_REP
 
             subProb.y = Malloc(double, subProb.l);
@@ -773,8 +775,8 @@ double PREFIX(computeVotes) (const PREFIX(Model) *model, const PREFIX(Node) *x, 
         if(vote[i] > vote[voteMaxIdx])
             voteMaxIdx = i;
 
-    //std::cout << "VoteMax: " << voteMaxIdx << std::endl;
-    //std::cout << "Predicted label: " << model->label[voteMaxIdx] << std::endl;
+//    std::cout << "VoteMax: " << voteMaxIdx << std::endl;
+//    std::cout << "Predicted label: " << model->label[voteMaxIdx] << std::endl;
 
     free(kValue);
     free(start);
