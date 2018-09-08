@@ -72,7 +72,7 @@ static double kernelRBF(const PREFIX(Node) *x, const PREFIX(Node) *y, const doub
 
     for(i = 0; i < dim; ++i)
     {
-        double d = x->values[i] * y->values[i];
+        double d = x->values[i] - y->values[i];
         sum += d * d;
     }
 
@@ -154,7 +154,8 @@ static void SVMSolver(const PREFIX(Problem)& prob, const SVMParameter& para,
         ++t;
         learnRate = 2 / sqrt(t);
 
-        std::cout << "Worst violator index: " << idxWV << " | Output: " << outputVec[idxWV] << std::endl;
+        //std::cout << "Worst violator index: " << idxWV << " | Output: " << yo << std::endl;
+
         // Remove worst violator from index set
         nonSVIdx.erase(std::remove(nonSVIdx.begin(), nonSVIdx.end(), idxWV),
                         nonSVIdx.end());
@@ -362,7 +363,7 @@ static void groupClasses(const PREFIX(Problem) *prob, int* numClass, int** label
     *count_ret = countLables;
     free(dataLabel);
 
-    std::cout << "Classes are grouped!" << std::endl;
+    //std::cout << "Classes are grouped!" << std::endl;
 
 }
 
@@ -402,7 +403,7 @@ static decisionFunction trainOneSVM(const PREFIX(Problem) *prob, const SVMParame
 PREFIX(Model) *PREFIX(Train)(const SVMProblem *prob, const SVMParameter *param, int *status)
 {
 
-    std::cout << "Training started... | C: " << param->C << " Gamma: " << param->gamma << std::endl;
+    //std::cout << "Training started... | C: " << param->C << " Gamma: " << param->gamma << std::endl;
 
     // Print elements - FOR DEBUGGING PURPOSE
     //printData(prob->x, prob->l);
@@ -627,7 +628,7 @@ PREFIX(Model) *PREFIX(Train)(const SVMProblem *prob, const SVMParameter *param, 
     free(nzStart);
 
     *status = 1;
-    std::cout << "Training Finished!!" << std::endl;
+    //std::cout << "Training Finished!!" << std::endl;
 
     return model;
 }
@@ -699,7 +700,7 @@ void PREFIX(FreeModel)(PREFIX(Model)** model_ptr_ptr)
 
         *model_ptr_ptr = NULL;
 
-        std::cout << "The model successfully destroyed." << std::endl;
+        //std::cout << "The model successfully destroyed." << std::endl;
 
     }
 

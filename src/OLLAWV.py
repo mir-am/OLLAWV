@@ -120,6 +120,8 @@ class OLLAWV:
         self.X_train = X_train
         
         M = 0.1 * self.c # Scaled value of C
+        
+        print("M: %f" % M)
 
         # Initialize OLLAWV model parameters
         self.alpha = np.zeros((self.X_train.shape[0]))
@@ -141,7 +143,7 @@ class OLLAWV:
 
             t = t + 1
             learn_rate = 2 / np.sqrt(t)
-            print("Worst violator index: ", wv, " | Output: ", output_vec[wv])
+            print("Worst violator index: ", wv, " | Output: ", yo)
             non_sv_idx.remove(wv) # Save index of worst violator
 
             # Calculate hingeloss update
@@ -156,7 +158,7 @@ class OLLAWV:
             
             if len(non_sv_idx) != 0:
 
-                output_vec[non_sv_idx[0]] = output_vec[non_sv_idx[0]] + loss * \
+                output_vec[non_sv_idx[0]] += loss * \
                 rbf_kernel(X_train[non_sv_idx[0]], X_train[wv], self.y) + B
                           
                 new_wv = non_sv_idx[0]
@@ -165,7 +167,7 @@ class OLLAWV:
                 # Update output vector         
                 for idx in non_sv_idx[1:]:
     
-                    output_vec[idx] = output_vec[idx] + loss * rbf_kernel(X_train[idx], \
+                    output_vec[idx] += loss * rbf_kernel(X_train[idx], \
                               X_train[wv], self.y) + B
                               
                     # Find the worst violator
@@ -311,7 +313,7 @@ X_t, X_te, y_tr, y_te = train_test_split(train_data, lables, test_size=0.2,\
 #
 start_t = time.time()
 #
-svm_1 = OLLAWV(4, 0.125)
+svm_1 = OLLAWV(0.125, 2)
 svm_1.fit(X_t, y_tr)
 result = svm_1.predict(X_te)
 

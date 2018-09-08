@@ -23,7 +23,7 @@ struct SVMNode* denseToLIBSVM(double *x, npy_intp* dims)
     double *tx = x;
 	int i, j;
 
-	printf("Row: %d, Col: %d\n", (int) len_row, (int) len_col);
+	//printf("Row: %d, Col: %d\n", (int) len_row, (int) len_col);
 
 	node = (struct SVMNode*) malloc(dims[0] * sizeof(struct SVMNode));
 
@@ -109,7 +109,7 @@ struct SVMModel *setModel(struct SVMParameter *param, int nrClass, char *SV, npy
 
     model->freeSV = 0;
 
-    printf("Model created...\n");
+    //printf("Model created...\n");
 
     return model;
 
@@ -228,7 +228,7 @@ int copyPredict(char *predict, struct SVMModel *model, npy_intp *predictDims,
     }
 
     free(predictNodes);
-    printf("Predicted....\n");
+    //printf("Predicted....\n");
 
     return 0;
 
