@@ -13,6 +13,7 @@ from dataproc import read_data
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import accuracy_score
 import numpy as np
+import scipy.sparse as sp
 import cy_wrap
 import time
 
@@ -90,13 +91,28 @@ class SVM:
         
         y = self._validate_targets(y_train)
         
+        # Check the input matrix is dense or sparse
+        is_sp = sp.isspmatrix(X_train)
+        
+        print("Is Sparse? ", is_sp)
+        
         #print(y)
         #print("First row: ", X_train[0, :])
         #print("Last row: ", X_train[-1, :])
         
+        fit =  self._sparse_fit if is_sp else self._dense_fit 
+        
         self.support_, self.support_vectors_, self.n_support_, \
         self.dual_coef_, self.intercept_, self.fit_status_ = cy_wrap.fit(
                 X_train, y, self.C, self.gamma, self.tol)
+        
+    def _sparse_fit(self, X, y):
+        
+        pass
+    
+    def _dense_fit(self, X, y):
+        
+        pass
     
     def predict(self, X_test):
         
@@ -120,23 +136,31 @@ class SVM:
 
 if __name__ == '__main__':
     
-    train_data, lables, file_name = read_data('../dataset/iris.csv')
+    train_data, lables, file_name = read_data('../dataset/CNAE-9.csv')
     
     X_t, X_te, y_tr, y_te = train_test_split(train_data, lables, test_size=0.2,\
                                                     random_state=42)
     
     start_t = time.time()
     
-    model = SVM('RBF', 0.125, 2)
+    model = SVM('RBF', 2, 0.0625)
     model.fit(X_t, y_tr)
+    
+    print("Training Finished in %.3f ms" % ((time.time() - start_t) * 1000))
+    
+    t_test = time.time()
+    
     pred = model.predict(X_te)
-    pred_train = model.predict(X_t)
+    
+    print("Prediction Finished in %.3f ms" % ((time.time() - t_test) * 1000))
+
+    #pred_train = model.predict(X_t)
     
     #print("Targets: \n", y_te)
     #print("Predictions: \n", pred)
     
     print("Test Accuracy: %.2f" % (accuracy_score(y_te, pred) * 100))
-    print("Training Accuracy: %.2f" % (accuracy_score(y_tr, pred_train) * 100))
+    #print("Training Accuracy: %.2f" % (accuracy_score(y_tr, pred_train) * 100))
     
     print("Finished in %.3f ms" % ((time.time() - start_t) * 1000))
 

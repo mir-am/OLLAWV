@@ -143,7 +143,7 @@ class OLLAWV:
 
             t = t + 1
             learn_rate = 2 / np.sqrt(t)
-            print("Worst violator index: ", wv, " | Output: ", yo)
+            #print("Worst violator index: ", wv, " | Output: ", yo)
             non_sv_idx.remove(wv) # Save index of worst violator
 
             # Calculate hingeloss update
@@ -307,13 +307,13 @@ def grid_search(data_train, data_labels, c_l_bound, c_u_bound, rbf_lbound, \
 # Test
 #c = 4 ** -2
 #y = 4 ** -5
-train_data, lables, filename = read_data('../dataset/checkerboard.csv')
+train_data, lables, filename = read_data('../dataset/pima-indian.csv')
 X_t, X_te, y_tr, y_te = train_test_split(train_data, lables, test_size=0.2,\
                                                     random_state=42)
 #
 start_t = time.time()
 #
-svm_1 = OLLAWV(0.125, 2)
+svm_1 = OLLAWV(0.5, 0.125)
 svm_1.fit(X_t, y_tr)
 result = svm_1.predict(X_te)
 
