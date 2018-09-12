@@ -57,7 +57,3 @@ cdef extern from "lib/svm_helper.c":
     
     int freeModel(SVMModel *)
     
-    
-    
-    
-

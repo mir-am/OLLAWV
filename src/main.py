@@ -37,9 +37,9 @@ class UserInput:
 if __name__ == '__main__':
 
     
-    dataset = read_data('../dataset/checkerboard.csv')
+    dataset = read_data('/home/mir/Dataset/mc-data/dermatology.csv')
     
-    user_in_obj = UserInput(dataset, './result', 'RBF', ('CV', 5), -5, 5, -5, 5)
+    user_in_obj = UserInput(dataset, './result', 'RBF', ('CV', 5), -5, 2, -10, 5)
     
     initializer(user_in_obj)
     

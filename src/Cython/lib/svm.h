@@ -90,47 +90,6 @@ double SVMPredict(const struct SVMModel *model, const struct SVMNode *x);
 //void crossValidation(const SVMProblem& prob, SVMParameter& param, int numFolds);
 
 
-/* Sparse version */
-
-struct SVMSparseNode
-{
-    int index;
-    double value;
-
-};
-
-
-struct SVMSparseProblem
-{
-    int l;
-    double *y;
-    struct SVMSparseNode **x;
-
-};
-
-
-struct SVMSparseModel
-{
-    struct SVMParameter param;
-    int numClass;
-    int *label; // Label of each class
-
-    int numSV; // total SupportVectors
-    struct SVMNode **SV;
-    double **svCoef; // coefficients for SVs in decision function
-    int *svIndices;
-    int *svClass; // Number of SVs for each class
-
-    double *bias;
-
-
-    int freeSV; // 1 if SVMModel created by SVMLoadModel
-                // 0 if SVMModel created by trainSVM
-
-};
-
-/* End of sparse version */
-
 #ifdef __cplusplus
 }
 #endif
