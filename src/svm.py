@@ -10,7 +10,12 @@ Python's wrapper for SVM classifier which is implemented in C++.
 """
 
 from dataproc import read_data
-from sklearn.model_selection import train_test_split
+from sklearn.model_selection import train_test_split, cross_val_score
+from sklearn.base import BaseEstimator, ClassifierMixin
+from sklearn.utils.estimator_checks import check_estimator
+from sklearn.utils.validation import check_X_y, check_is_fitted, check_array
+from sklearn.utils.multiclass import check_classification_targets
+from sklearn.utils import column_or_1d
 from sklearn.metrics import accuracy_score
 import numpy as np
 import scipy.sparse as sp
@@ -18,7 +23,7 @@ import cy_wrap
 import time
 
 
-class SVM:
+class SVM(BaseEstimator, ClassifierMixin):
     
     """
     Implementaion of Support Vector Machines using OLLAWV algorithm
@@ -50,8 +55,8 @@ class SVM:
         self.cl_name = "SVM"
         
         # Model
-        self.support_ = self.support_vectors_ = self.n_support_ = self.dual_coef_ = \
-        self.intercept = self.fit_status_ = self.classes_ = None
+        #self.support_ = self.support_vectors_ = self.n_support_ = self.dual_coef_ = \
+        #self.intercept = self.fit_status_ = self.classes_ = None
         
     def set_parameter(self, C, gamma):
         
@@ -68,18 +73,38 @@ class SVM:
         self.gamma = gamma
         
         
-    def _validate_targets(self, labels):
+    def _validate_targets(self, y):
     
         """
         Validates labels for training and testing classifier
         """
-        
-        self.classes_, y = np.unique(labels, return_inverse=True)
+        y_ = column_or_1d(y, warn=True)
+        check_classification_targets(y)
+        self.classes_, y = np.unique(y_, return_inverse=True)
         
         return np.asarray(y, dtype=np.float64, order='C')
-        
     
-    def fit(self, X_train, y_train):
+    def _validate_for_predict(self, X):
+        
+        """
+        Checks that the classifier is already trained and also test samples are
+        valid
+        """
+        
+        check_is_fitted(self, ['support_'])
+        X = check_array(X, dtype=np.float64, order="C")
+        
+        n_samples, n_features = X.shape
+        
+        if n_features != self.shape_fit_[1]:
+            
+            raise ValueError("X.shape[1] = %d should be equal to %d," 
+                             "the number of features of training samples" % 
+                             (n_features, self.shape_fit_[1]))
+        
+        return X
+        
+    def fit(self, X, y):
         
         """
         Given training set, it creates a SVM model
@@ -89,11 +114,20 @@ class SVM:
             y_train: Target values, (n_samples, )
         """
         
-        y = self._validate_targets(y_train)
+        y = self._validate_targets(y)
+        X, y = check_X_y(X, y, dtype=np.float64,
+                                     order='C')
+        
         
         self.support_, self.support_vectors_, self.n_support_, \
         self.dual_coef_, self.intercept_, self.fit_status_ = cy_wrap.fit(
-                X_train, y, self.C, self.gamma, self.tol)
+                X, y, self.C, self.gamma, self.tol)
+        
+        self.shape_fit_ = X.shape
+        self.X_ = X
+        self.y_ = y
+        
+        return self
     
     def predict(self, X_test):
         
@@ -108,6 +142,8 @@ class SVM:
         
         """
         
+        X_test = self._validate_for_predict(X_test)
+        
         y = cy_wrap.predict(X_test, self.support_, self.support_vectors_,
                         self.n_support_, self.dual_coef_, self.intercept_, self.gamma)
         
@@ -119,28 +155,32 @@ if __name__ == '__main__':
     
     train_data, lables, file_name = read_data('../dataset/pima-indian.csv')
     
-    X_t, X_te, y_tr, y_te = train_test_split(train_data, lables, test_size=0.2,\
-                                                    random_state=42)
-    
     start_t = time.time()
     
-    model = SVM('RBF', 1, 0.5)
-    model.fit(X_t, y_tr)
+    model = SVM('RBF', 0.125, 2)
     
-    print("Training Finished in %.3f ms" % ((time.time() - start_t) * 1000))
+    scores = cross_val_score(model, train_data, lables, cv=5)
+    print(scores.mean())
     
-    t_test = time.time()
+    #model.fit(X_t, y_tr)
     
-    pred = model.predict(X_te)
+    #check_estimator(SVM)
     
-    print("Prediction Finished in %.3f ms" % ((time.time() - t_test) * 1000))
+    
+    #print("Training Finished in %.3f ms" % ((time.time() - start_t) * 1000))
+    
+    #t_test = time.time()
+    
+    #pred = model.predict(X_te)
+    
+    #print("Prediction Finished in %.3f ms" % ((time.time() - t_test) * 1000))
 
     #pred_train = model.predict(X_t)
     
     #print("Targets: \n", y_te)
     #print("Predictions: \n", pred)
     
-    print("Test Accuracy: %.2f" % (accuracy_score(y_te, pred) * 100))
+    #print("Test Accuracy: %.2f" % (accuracy_score(y_te, pred) * 100))
     #print("Training Accuracy: %.2f" % (accuracy_score(y_tr, pred_train) * 100))
     
     print("Finished in %.3f ms" % ((time.time() - start_t) * 1000))
