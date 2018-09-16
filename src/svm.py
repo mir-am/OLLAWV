@@ -10,7 +10,7 @@ Python's wrapper for SVM classifier which is implemented in C++.
 """
 
 from dataproc import read_data
-from sklearn.model_selection import train_test_split, cross_val_score
+from sklearn.model_selection import train_test_split, cross_val_score, GridSearchCV
 from sklearn.base import BaseEstimator, ClassifierMixin
 from sklearn.utils.estimator_checks import check_estimator
 from sklearn.utils.validation import check_X_y, check_is_fitted, check_array
@@ -153,14 +153,28 @@ class SVM(BaseEstimator, ClassifierMixin):
 
 if __name__ == '__main__':
     
-    train_data, lables, file_name = read_data('../dataset/pima-indian.csv')
+    train_data, lables, file_name = read_data('/home/mir/Dataset/mc-data/ecoli.csv')
+    
+#    X_t, X_te, y_tr, y_te = train_test_split(train_data, lables, test_size=0.2,\
+#                                                    random_state=42)
+    
+    param = {'C': [float(2**i) for i in range(-5, 6)],
+             'gamma': [float(2**i) for i in range(-10, 3)]}
     
     start_t = time.time()
     
-    model = SVM('RBF', 0.125, 2)
+    model = SVM()
     
-    scores = cross_val_score(model, train_data, lables, cv=5)
-    print(scores.mean())
+    #scores = cross_val_score(model, train_data, lables, cv=5)
+    
+    result = GridSearchCV(model, param, cv=10, n_jobs=-1, refit=False)
+    result.fit(train_data, lables)
+    
+    print(result.best_score_ * 100)
+    print(result.best_params_)
+    print(result.cv_results_['std_test_score'][result.best_index_] * 100)
+    
+    #print("Accuracy: %.2f" % (scores.mean() * 100))
     
     #model.fit(X_t, y_tr)
     
