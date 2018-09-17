@@ -153,7 +153,7 @@ class SVM(BaseEstimator, ClassifierMixin):
 
 if __name__ == '__main__':
     
-    train_data, lables, file_name = read_data('/home/mir/Dataset/mc-data/ecoli.csv')
+    train_data, lables, file_name = read_data('../dataset/checkerboard.csv')
     
 #    X_t, X_te, y_tr, y_te = train_test_split(train_data, lables, test_size=0.2,\
 #                                                    random_state=42)
@@ -167,7 +167,7 @@ if __name__ == '__main__':
     
     #scores = cross_val_score(model, train_data, lables, cv=5)
     
-    result = GridSearchCV(model, param, cv=10, n_jobs=-1, refit=False)
+    result = GridSearchCV(model, param, cv=5, n_jobs=-1, refit=False, verbose=1)
     result.fit(train_data, lables)
     
     print(result.best_score_ * 100)

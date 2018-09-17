@@ -16,7 +16,7 @@ from svm import SVM
 import numpy as np
 import time
 
-train_data, lables, file_name = read_data('/home/mir/Mir/Mir-Repo/dataset/mc-data/tae.csv')
+train_data, lables, file_name = read_data('../dataset/checkerboard.csv')
 
 sk_model = SVC()
 mir_model = SVM()
@@ -26,7 +26,7 @@ param = {'C': [float(2**i) for i in range(-10, 6)],
     
 mir_start_t = time.time()
 
-mir_result = GridSearchCV(mir_model, param, cv=5, n_jobs=-1, refit=False, verbose=1)
+mir_result = GridSearchCV(mir_model, param, cv=10, n_jobs=-1, refit=False, verbose=1)
 mir_result.fit(train_data, lables)
 
 mir_end = time.time()
@@ -35,7 +35,7 @@ mir_end = time.time()
 
 sk_start_t = time.time()
 
-sk_result = GridSearchCV(sk_model, param, cv=5, n_jobs=-1, refit=False, verbose=1)
+sk_result = GridSearchCV(sk_model, param, cv=10, n_jobs=-1, refit=False, verbose=1)
 sk_result.fit(train_data, lables)
 
 sk_end = time.time()

@@ -21,6 +21,38 @@ static inline void swapVar(T& x, T& y)
     y = temp;
 }
 
+// Dense representation
+#ifdef _DENSE_REP
+
+	#ifdef PREFIX
+		#undef PREFIX
+	#endif
+
+	#ifdef NAMESPACE
+		#undef NAMESPACE
+	#endif
+
+	#define PREFIX(name) SVM##name
+	#define NAMESPACE svm
+	namespace svm {
+
+// Sparse representation
+#else
+
+	#ifdef PREFIX
+		#undef PREFIX
+	#endif
+
+	#ifdef NAMESPACE
+		#undef NAMESPACE
+	#endif
+
+	#define PREFIX(name) SVMSparse##name
+	#define NAMESPACE svm_csr
+	namespace svm_csr {
+
+#endif
+
 
 struct decisionFunction
 {
@@ -30,9 +62,11 @@ struct decisionFunction
 };
 
 
-static double kernelRBF(const SVMNode *x, const SVMNode *y, const double& gamma)
+static double kernelRBF(const PREFIX(Node) *x, const PREFIX(Node) *y, const double& gamma)
 {
     double sum = 0;
+
+#ifdef _DENSE_REP
 
     int dim = std::min(x->dim, y->dim), i;
 
@@ -48,11 +82,51 @@ static double kernelRBF(const SVMNode *x, const SVMNode *y, const double& gamma)
     for( ; i < y->dim; ++i)
         sum += y->values[i] * y->values[i];
 
+#else
+
+    while(x->index != -1 && y->index != -1)
+    {
+        if(x->index == y->index)
+        {
+            double d = x->value - y->value;
+            sum += d * d;
+            ++x;
+            ++y;
+        }
+        else
+        {
+            if(x->index > y->index)
+            {
+                sum += y->value * y->value;
+                ++y;
+            }
+            else
+            {
+                sum += x->value * x->value;
+                ++x;
+            }
+        }
+    }
+
+    while(x->index != -1)
+    {
+        sum += x->value * x->value;
+        ++x;
+    }
+
+    while(y->index != -1)
+    {
+        sum += y->value * y->value;
+        ++y;
+    }
+
+#endif // _DENSE_REP
+
     return exp(-gamma * sum);
 }
 
 
-static void SVMSolver(const SVMProblem& prob, const SVMParameter& para,
+static void SVMSolver(const PREFIX(Problem)& prob, const SVMParameter& para,
                decisionFunction& solution)
 {
 
@@ -99,9 +173,16 @@ static void SVMSolver(const SVMProblem& prob, const SVMParameter& para,
         if (nonSVIdx.size() != 0)
         {
 
-
+#ifdef _DENSE_REP
             outputVec[nonSVIdx[0]] += ((hingeLoss * kernelRBF(&prob.x[nonSVIdx[0]],
                                       &prob.x[idxWV], para.gamma)) + B);
+
+#else
+
+            outputVec[nonSVIdx[0]] += ((hingeLoss * kernelRBF(prob.x[nonSVIdx[0]],
+                                      prob.x[idxWV], para.gamma)) + B);
+
+#endif // _DENSE_REP
 
             // Suppose that first element of nonSVIdx vector is worst violator sample
             unsigned int newIdxWV = nonSVIdx[0];
@@ -109,8 +190,18 @@ static void SVMSolver(const SVMProblem& prob, const SVMParameter& para,
 
             for(size_t idx = 1; idx < nonSVIdx.size(); ++idx)
             {
+
+#ifdef _DENSE_REP
                 outputVec[nonSVIdx[idx]] += ((hingeLoss * kernelRBF(&prob.x[nonSVIdx[idx]],
                                             &prob.x[idxWV], para.gamma)) + B);
+
+#else
+
+                outputVec[nonSVIdx[idx]] += ((hingeLoss * kernelRBF(&prob.x[nonSVIdx[idx]],
+                                            &prob.x[idxWV], para.gamma)) + B);
+
+#endif // _DENSE_REP
+
 
                 //std::cout << outputVec[nonSVIdx[idx]] << std::endl;
 
@@ -137,12 +228,12 @@ static void SVMSolver(const SVMProblem& prob, const SVMParameter& para,
 
     solution.obj = yo;
 
-    std::cout << "Iterations: " << t << std::endl;
+    //std::cout << "Iterations: " << t << std::endl;
 
 }
 
 
-static void groupClasses(const SVMProblem *prob, int* numClass, int** label_ret,
+static void groupClasses(const PREFIX(Problem) *prob, int* numClass, int** label_ret,
                           int** start_ret, int** count_ret, int* perm)
 {
     int l = prob->l;
@@ -287,8 +378,7 @@ static void groupClasses(const SVMProblem *prob, int* numClass, int** label_ret,
 }
 
 
-static decisionFunction trainOneSVM(const SVMProblem *prob, const SVMParameter* param,
-                                    int* status)
+static decisionFunction trainOneSVM(const PREFIX(Problem) *prob, const SVMParameter* param, int* status)
 {
 
     decisionFunction solutionInfo;
@@ -302,8 +392,8 @@ static decisionFunction trainOneSVM(const SVMProblem *prob, const SVMParameter* 
 
     SVMSolver(*prob, *param, solutionInfo);
 
-    std::cout << "obj = " << solutionInfo.obj << " Bias = " << solutionInfo.bias
-         << std::endl;
+    //std::cout << "obj = " << solutionInfo.obj << " Bias = " << solutionInfo.bias
+     //    << std::endl;
 
     // Count number of support vectors
     int nSV = 0;
@@ -313,13 +403,14 @@ static decisionFunction trainOneSVM(const SVMProblem *prob, const SVMParameter* 
             ++nSV;
     }
 
-    std::cout << "num. of SVs: " << nSV << std::endl;
+    //std::cout << "num. of SVs: " << nSV << std::endl;
 
     return solutionInfo;
 }
 
+} // End of namespace
 
-SVMModel *SVMTrain(const SVMProblem *prob, const SVMParameter *param, int *status)
+PREFIX(Model) *PREFIX(Train)(const PREFIX(Problem) *prob, const SVMParameter *param, int *status)
 {
 
     //std::cout << "Training started... | C: " << param->C << " Gamma: " << param->gamma << std::endl;
@@ -328,7 +419,7 @@ SVMModel *SVMTrain(const SVMProblem *prob, const SVMParameter *param, int *statu
     //printData(prob->x, prob->l);
 
     // Classification
-    SVMModel* model = Malloc(SVMModel, 1);
+    PREFIX(Model)* model = Malloc(PREFIX(Model), 1);
     model->param = *param;
     model->freeSV = 0;
 
@@ -339,9 +430,18 @@ SVMModel *SVMTrain(const SVMProblem *prob, const SVMParameter *param, int *statu
     int* count = NULL;
     int* perm = Malloc(int, numSamples);
 
-    groupClasses(prob, &numClass, &label, &start, &count, perm);
+    NAMESPACE::groupClasses(prob, &numClass, &label, &start, &count, perm);
 
-    SVMNode *x = Malloc(SVMNode, numSamples);
+#ifdef _DENSE_REP
+
+    PREFIX(Node) *x = Malloc(PREFIX(Node), numSamples);
+
+#else
+
+    // Allocate space for samples with respect to perm
+    PREFIX(Node) **x = Malloc(PREFIX(Node), numSamples);
+
+#endif // __DENSE_REP
 
     for(int i = 0; i < numSamples; ++i)
         x[i] = prob->x[perm[i]];
@@ -353,7 +453,7 @@ SVMModel *SVMTrain(const SVMProblem *prob, const SVMParameter *param, int *statu
         nonZero[i] = false;
 
     // Allocate space for each model's parameters such as weights and bias
-    decisionFunction* f = Malloc(decisionFunction, numClass*(numClass-1)/2);
+    NAMESPACE::decisionFunction* f = Malloc(NAMESPACE::decisionFunction, numClass*(numClass-1)/2);
 
     int p = 0;
     for(int i = 0; i < numClass; ++i)
@@ -361,7 +461,7 @@ SVMModel *SVMTrain(const SVMProblem *prob, const SVMParameter *param, int *statu
         for(int j = i + 1; j < numClass; ++j)
         {
 
-            SVMProblem subProb; // A sub problem for i-th and j-th class
+            PREFIX(Problem) subProb; // A sub problem for i-th and j-th class
 
             // start points of i-th and j-th classes
             int si = start[i], sj = start[j];
@@ -374,7 +474,12 @@ SVMModel *SVMTrain(const SVMProblem *prob, const SVMParameter *param, int *statu
 
             subProb.l = ci + cj;
 
+#ifdef _DENSE_REP
+
             subProb.x = Malloc(SVMNode, subProb.l);
+#else
+            subProb.x = Malloc(SVMNode *, subProb.l);
+#endif // _DENSE_REP
 
             subProb.y = Malloc(double, subProb.l);
 
@@ -390,7 +495,7 @@ SVMModel *SVMTrain(const SVMProblem *prob, const SVMParameter *param, int *statu
                 subProb.y[ci+k] = -1;
             }
 
-            f[p] = trainOneSVM(&subProb, param, status);
+            f[p] = NAMESPACE::trainOneSVM(&subProb, param, status);
 
             // Count number of support vectors of each class
             for(int k = 0; k < ci; ++k)
@@ -450,13 +555,19 @@ SVMModel *SVMTrain(const SVMProblem *prob, const SVMParameter *param, int *statu
     }
 
 
-    std::cout << "Total nSV: " << totalSV << std::endl;
+    //std::cout << "Total nSV: " << totalSV << std::endl;
 
     model->numSV = totalSV;
 
     model->svIndices = Malloc(int, totalSV);
 
+#ifdef _DENSE_REP
+
     model->SV = Malloc(SVMNode, totalSV);
+#else
+    model->SV = Malloc(SVMNode *, totalSV);
+#endif // _DENSE_REP
+
 
     p = 0;
     for(int i = 0; i < numSamples; ++i)
@@ -533,7 +644,7 @@ SVMModel *SVMTrain(const SVMProblem *prob, const SVMParameter *param, int *statu
 }
 
 
-const char *SVMCheckParameter(const SVMParameter *param)
+const char *PREFIX(CheckParameter)(const SVMParameter *param)
 {
 
     if(param->gamma < 0)
@@ -549,13 +660,18 @@ const char *SVMCheckParameter(const SVMParameter *param)
 }
 
 
-void SVMFreeModelContent(SVMModel *model_ptr)
+void PREFIX(FreeModelContent)(PREFIX(Model) *model_ptr)
 {
     if(model_ptr->freeSV && model_ptr->numSV > 0  && model_ptr->SV != NULL)
     {
+#ifdef _DENSE_REP
 
         for(int i = 0; i < model_ptr->numSV; ++i)
             free(model_ptr->SV[i].values);
+#else
+        free((void *) (model_ptr->SV[0]));
+
+#endif // _DENSE_REP
 
         if(model_ptr->svCoef)
         {
@@ -585,11 +701,11 @@ void SVMFreeModelContent(SVMModel *model_ptr)
 }
 
 
-void SVMFreeModel(SVMModel** model_ptr_ptr)
+void PREFIX(FreeModel)(PREFIX(Model)** model_ptr_ptr)
 {
     if(model_ptr_ptr != NULL && *model_ptr_ptr != NULL)
     {
-        SVMFreeModelContent(*model_ptr_ptr);
+        PREFIX(FreeModelContent)(*model_ptr_ptr);
         free(*model_ptr_ptr);
 
         *model_ptr_ptr = NULL;
@@ -601,7 +717,7 @@ void SVMFreeModel(SVMModel** model_ptr_ptr)
 }
 
 
-double computeVotes (const SVMModel *model, const SVMNode *x, double *decValues)
+double PREFIX(computeVotes) (const PREFIX(Model) *model, const PREFIX(Node) *x, double *decValues)
 {
     int numClasses = model->numClass;
     int numSamples = model->numSV;
@@ -611,7 +727,14 @@ double computeVotes (const SVMModel *model, const SVMNode *x, double *decValues)
 
     for(int i = 0; i < numSamples; ++i)
 
-        kValue[i] = kernelRBF(x, model->SV + i, model->param.gamma);
+#ifdef _DENSE_REP
+
+        kValue[i] = NAMESPACE::kernelRBF(x, model->SV + i, model->param.gamma);
+#else
+
+        kValue[i] = NAMESPACE::kernelRBF(x, model->SV[i], model->param.gamma);
+
+#endif // _DENSE_REP
 
 
     int* start = Malloc(int, numClasses);
@@ -674,14 +797,14 @@ double computeVotes (const SVMModel *model, const SVMNode *x, double *decValues)
 }
 
 
-double SVMPredict(const SVMModel *model, const SVMNode *x)
+double PREFIX(Predict)(const PREFIX(Model) *model, const PREFIX(Node) *x)
 {
     int numClass = model->numClass;
     double* decValues;
 
     decValues = Malloc(double, numClass * (numClass - 1) / 2);
 
-    double predResult = computeVotes(model, x, decValues);
+    double predResult = PREFIX(computeVotes)(model, x, decValues);
 
     free(decValues);
 
