@@ -7,6 +7,9 @@ Created on Sun Aug 19 15:46:58 2018
 
 Python's wrapper for SVM classifier which is implemented in C++.
 
+To solve SVM's primal problems, Online learning algorithm using worst violators
+(OLLAWV) is implemented.
+
 """
 
 from dataproc import read_data
@@ -153,7 +156,7 @@ class SVM(BaseEstimator, ClassifierMixin):
 
 if __name__ == '__main__':
     
-    train_data, lables, file_name = read_data('../dataset/checkerboard.csv')
+    train_data, lables, file_name = read_data('../../dataset/pima-indian.csv')
     
 #    X_t, X_te, y_tr, y_te = train_test_split(train_data, lables, test_size=0.2,\
 #                                                    random_state=42)
@@ -167,7 +170,7 @@ if __name__ == '__main__':
     
     #scores = cross_val_score(model, train_data, lables, cv=5)
     
-    result = GridSearchCV(model, param, cv=5, n_jobs=-1, refit=False, verbose=1)
+    result = GridSearchCV(model, param, cv=5, n_jobs=4, refit=False, verbose=1)
     result.fit(train_data, lables)
     
     print(result.best_score_ * 100)
