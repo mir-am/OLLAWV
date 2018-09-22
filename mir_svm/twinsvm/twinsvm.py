@@ -18,17 +18,21 @@ Tomar, D., & Agarwal, S. (2015). A comparison on multi-class classification meth
 """
 
 # ClippDCD optimizer is an extension module which is implemented in C++
-from ..utils.dataproc import read_data
+from dataproc import read_data
 from sklearn.base import BaseEstimator, ClassifierMixin
 from sklearn.utils.estimator_checks import check_estimator
-#import clippdcd
+from sklearn.model_selection import train_test_split
+from sklearn.utils.multiclass import check_classification_targets, type_of_target
+from sklearn.utils import column_or_1d
+from sklearn.metrics import accuracy_score
+import clippdcd
 import numpy as np
 import time
 
 
 class TSVM(BaseEstimator, ClassifierMixin):
 
-    def __init__(self, kernel_type='linear', rect_kernel=1, c1=2**0, c2=2**0, \
+    def __init__(self, kernel='linear', rect_kernel=1, C1=2**0, C2=2**0, \
                  gamma=2**0):
 
         """
@@ -38,11 +42,11 @@ class TSVM(BaseEstimator, ClassifierMixin):
             gamma: RBF function parameter
         """
 
-        self.C1 = c1
-        self.C2 = c2
-        self.u = gamma
-        self.kernel_t = kernel_type
-        self.rectangular_size = rect_kernel
+        self.C1 = C1
+        self.C2 = C2
+        self.gamma = gamma
+        self.kernel = kernel
+        self.rect_kernel = rect_kernel
         #self.mat_C_t = None
 
         # Two hyperplanes attributes
@@ -61,8 +65,28 @@ class TSVM(BaseEstimator, ClassifierMixin):
 #
 #        self.C1 = c1
 #        self.C2 = c2
-#        self.u = gamma
+#        self.gamma = gamma
+    
+    def _validate_targets(self, y):
 
+        """
+        Validates labels for training and testing classifier
+        """
+
+        y_ = column_or_1d(y, warn=True)
+        check_classification_targets(y)
+        self.classes_, y = np.unique(y_, return_inverse=True)
+        
+        # Make sure that lables are binary
+        if type_of_target(y) == 'binary': 
+        
+            return y
+        
+        else:
+            
+            print("Labels must be binary. That is, +1 or -1")
+        
+        
     def fit(self, X, y):
 
         """
@@ -74,7 +98,9 @@ class TSVM(BaseEstimator, ClassifierMixin):
 
             w1, w2: Coordinates of two non-parallel hyperplanes
             b1, b2: Biases
-            """
+        """
+        
+        y = self._validate_targets(y)
 
         # Matrix A or class 1 samples
         mat_A = X[y == 1]
@@ -86,21 +112,21 @@ class TSVM(BaseEstimator, ClassifierMixin):
         mat_e1 = np.ones((mat_A.shape[0], 1))
         mat_e2 = np.ones((mat_B.shape[0], 1))
 
-        if self.kernel_t == 'linear':  # Linear kernel
+        if self.kernel == 'linear':  # Linear kernel
             
             mat_H = np.column_stack((mat_A, mat_e1))
             mat_G = np.column_stack((mat_B, mat_e2))
 
-        elif self.kernel_t == 'RBF': # Non-linear 
+        elif self.kernel == 'RBF': # Non-linear 
 
             # class 1 & class -1
             mat_C = np.row_stack((mat_A, mat_B))
 
-            self.mat_C_t = np.transpose(mat_C)[:, :int(mat_C.shape[0] * self.rectangular_size)]
+            self.mat_C_t = np.transpose(mat_C)[:, :int(mat_C.shape[0] * self.rect_kernel)]
 
-            mat_H = np.column_stack((rbf_kernel(mat_A, self.mat_C_t, self.u), mat_e1))
+            mat_H = np.column_stack((rbf_kernel(mat_A, self.mat_C_t, self.gamma), mat_e1))
 
-            mat_G = np.column_stack((rbf_kernel(mat_B, self.mat_C_t, self.u), mat_e2))
+            mat_G = np.column_stack((rbf_kernel(mat_B, self.mat_C_t, self.gamma), mat_e2))
 
 
         mat_H_t = np.transpose(mat_H)
@@ -148,14 +174,14 @@ class TSVM(BaseEstimator, ClassifierMixin):
         prepen_distance = np.zeros((X.shape[0], 2))
 
         kernel_f = {'linear': lambda i: X[i, :] , 'RBF': lambda i: rbf_kernel(X[i, :], \
-                    self.mat_C_t, self.u)}
+                    self.mat_C_t, self.gamma)}
 
         for i in range(X.shape[0]):
 
             # Prependicular distance of data pint i from hyperplanes
-            prepen_distance[i, 1] = np.abs(np.dot(kernel_f[self.kernel_t](i), self.w1) + self.b1)
+            prepen_distance[i, 1] = np.abs(np.dot(kernel_f[self.kernel](i), self.w1) + self.b1)
 
-            prepen_distance[i, 0] = np.abs(np.dot(kernel_f[self.kernel_t](i), self.w2) + self.b2)
+            prepen_distance[i, 0] = np.abs(np.dot(kernel_f[self.kernel](i), self.w2) + self.b2)
 
         # Assign data points to class +1 or -1 based on distance from hyperplanes
         output = 2 * np.argmin(prepen_distance, axis=1) - 1
@@ -178,10 +204,29 @@ def rbf_kernel(x, y, u):
 
 
 if __name__ == '__main__':
+#    
+#    train_data, lables, file_name = read_data('../dataset/pima-indian.csv')
+#    
+#    X_t, X_te, y_tr, y_te = train_test_split(train_data, lables, test_size=0.2,\
+#                                                    random_state=42)
     
-    train_data, lables, file_name = read_data('../dataset/pima-indian.csv')
+#    
+#    start_t = time.time()
+#    
+#    model = TSVM('linear', 1, 1, 0.25)
+#    model.fit(X_t, y_tr)
+#    
+#    end_t = (time.time() - start_t) * 1000 # in Miliseconds
+#    
+#    print("Elapsed: %2.f ms" % end_t)
+#    
+#    pre = model.predict(X_te)
+#    
+#    acc = accuracy_score(y_te, pre) * 100
+#    
+#    print("Accuracy: %.2f percent" % acc)
     
-    #model = TSVM()
-    #check_estimator(TSVM)
+    
+    check_estimator(TSVM)
     
     
