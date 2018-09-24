@@ -21,6 +21,8 @@ static inline void swapVar(T& x, T& y)
     y = temp;
 }
 
+typedef float Qfloat;
+
 // Dense representation
 #ifdef _DENSE_REP
 
@@ -52,6 +54,69 @@ static inline void swapVar(T& x, T& y)
 	namespace svm_csr {
 
 #endif
+
+
+class QMatrix
+{
+    public:
+
+        // Getting one column from Q matrix
+        virtual Qfloat* get_Q(int column, int len) const = 0;
+        virtual double* get_QD() const = 0;
+        virtual void swap_index(int i, j) const = 0;
+        virtual ~QMatrix() {}
+
+
+};
+
+
+class Kernel: public QMatrix
+{
+
+    public:
+
+#ifdef _DENSE_REP
+
+        Kernel(int l, PREFIX(node) *x, const SVMParameter& param);
+
+#else
+
+        Kernel(int l, PREFIX(node) * const *x, const SVMParameter& param);
+
+#endif // _DENSE_REP
+
+        virtual ~Kernel();
+
+        static double k_function(const PREFIX(node) *x, const PREFIX(node) *y,
+                                 const SVMParameter& param);
+
+        virtual Qfloat* get_Q(int column, int len) const = 0;
+        virtual double* get_QD() const = 0;
+
+        void swap_index(int i, int j)
+
+    private:
+
+#ifdef _DENSE_REP
+
+        PREFIX(node) *x;
+
+#else
+
+        const PREFIX(node) **x;
+
+#endif // _DENSE_REP
+
+        double *x_square;
+
+        // SVM parameters
+        int kernelType;
+        const double gamma;
+
+        static double dot(const PREFIX(node) *px, const PREFIX(node) *py);
+
+
+};
 
 
 struct decisionFunction
