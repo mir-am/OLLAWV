@@ -115,9 +115,52 @@ class Kernel: public QMatrix
 
         static double dot(const PREFIX(node) *px, const PREFIX(node) *py);
 
+#ifdef _DENSE_REP
+
+        static double dot(const PREFIX(node) &px, const PREFIX(node) &py);
+
+#endif
+
+        double kernelLinear(int i, int j) const
+        {
+            return dot(x[i], x[j]);
+        }
+
+        double kernelRBF(int i, int j) const
+        {
+            return exp(-gamma * (x_square[i] + x_square[j] - 2 * dot(x[i], x[j])));
+        }
+
 
 };
 
+
+#ifdef _DENSE_REP
+
+        Kernel::Kernel(int l, PREFIX(node) *x_, const SVMParameter& param)
+
+#else
+
+        Kernel::Kernel(int l, PREFIX(node) * const *x, const SVMParameter& param)
+
+#endif // _DENSE_REP
+:kernelType(param.kernelType), gamma(param.gamma)
+{
+    switch(kernelType)
+    {
+        case LINEAR:
+
+            k_function = &Kernel::kernelLinear;
+            break;
+
+        case RBF:
+
+            k_function = &Kernel::kernelRBF;
+            break;
+
+    }
+
+}
 
 struct decisionFunction
 {

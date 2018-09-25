@@ -7,6 +7,9 @@ extern "C" {
 #endif
 //#include <string>
 
+// Kernel types
+enum {LINEAR, RBF}
+
 
 struct SVMNode
 {
@@ -30,6 +33,7 @@ struct SVMProblem
 
 struct SVMParameter
 {
+    int kernelType;
     double C; // Penalty parameter
     double gamma; // Parameter of RBF function
     // a value between 0 and 1. For calculating stopping criteria

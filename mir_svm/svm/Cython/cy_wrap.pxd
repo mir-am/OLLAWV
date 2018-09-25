@@ -17,6 +17,7 @@ cdef extern from "lib/svm.h":
     
     cdef struct SVMParameter:
         
+        int kernelType
         double gamma # For RBF function
         double C # Penlaty parameter
         double e # A value between 0 and 1. Stopping criteria

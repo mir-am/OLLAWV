@@ -11,13 +11,16 @@ import numpy as np
 cimport numpy as np
 cimport cy_wrap
 from libc.stdlib cimport free
-
 np.import_array()
+
+
+KERNEL_TYPES = ['linear', 'rbf']
+
 
 # Wrapper function
 def fit(np.ndarray[np.float64_t, ndim=2, mode='c'] X,
         np.ndarray[np.float64_t, ndim=1, mode='c'] Y,
-        double C=1, double gamma=0.1, double tol=0.1):
+        kernel='rbf', double C=1, double gamma=0.1, double tol=0.1):
     
     """
     Train the SVM model with OLLAWV using low-level mothods
@@ -46,6 +49,7 @@ def fit(np.ndarray[np.float64_t, ndim=2, mode='c'] X,
     cdef np.npy_intp SV_len
     cdef np.npy_intp nr
     
+    index_kernel = KERNEL_TYPES.index(kernel)
     setProblem(&prob, X.data, Y.data, X.shape)
     
     if prob.x == NULL:
