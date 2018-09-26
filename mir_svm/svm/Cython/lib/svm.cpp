@@ -21,6 +21,13 @@ static inline void swapVar(T& x, T& y)
     y = temp;
 }
 
+template <typename S, typename T>
+static inline void cloneVar(T&* dst, S* src, int n)
+{
+    dst = new T[n];
+    memcpy((void *) dst, (void *) src, sizeof(T) * n);
+}
+
 typedef float Qfloat;
 
 // Dense representation
@@ -141,7 +148,7 @@ class Kernel: public QMatrix
 
 #else
 
-        Kernel::Kernel(int l, PREFIX(node) * const *x, const SVMParameter& param)
+        Kernel::Kernel(int l, PREFIX(node) * const *x_, const SVMParameter& param)
 
 #endif // _DENSE_REP
 :kernelType(param.kernelType), gamma(param.gamma)
@@ -160,7 +167,82 @@ class Kernel: public QMatrix
 
     }
 
+    cloneVar(x, x_, l);
+
+    if(kernelType == RBF)
+    {
+        x_square = new double[l];
+
+        for(int i = 0; i < l; ++i)
+            x_square = dot(x[i], x[i]);
+    }
+    else
+
+        x_square = 0;
+
 }
+
+Kernel::~Kernel()
+{
+    delete[] x;
+    delete[] x_square;
+}
+
+
+#ifdef _DENSE_REP
+
+double Kernel::dot(const PREFIX(node) *px, const PREFIX(node) *py)
+{
+    double sum = 0;
+    int dim = min(py->dim, px->dim);
+
+    for(int i = 0; i < dim; ++i)
+        sum += (px->values)[i] * (py->values)[i];
+
+    return sum;
+
+}
+
+double Kernel::dot(const PREFIX(node) &px, const PREFIX(node) &py)
+{
+    double sum = 0;
+    int dim = min(py.dim, px.dim);
+
+    for(int i = 0; i < dim; ++i)
+        sum += px.values[i] * py.values[i];
+
+    return sum;
+
+}
+
+#else
+
+double Kernel::dot(const PREFIX(node) *px, const PREFIX(node) *py)
+{
+    double sum = 0;
+
+    while(px->index != -1 && py->index != -1)
+    {
+        if(px->index == py->index)
+        {
+            sum += px->value * py->value;
+            ++px;
+            ++py;
+        }
+        else
+        {
+            if(px->index > py->index)
+                ++py;
+            else
+                ++px;
+        }
+    }
+
+    return sum;
+
+}
+
+#endif // _DENSE_REP
 
 struct decisionFunction
 {

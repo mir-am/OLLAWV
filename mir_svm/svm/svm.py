@@ -32,7 +32,7 @@ class SVM(BaseEstimator, ClassifierMixin):
     Implementaion of Support Vector Machines using OLLAWV algorithm
     """
     
-    def __init__(self, kernel='RBF', C=1.0, gamma=1.0, tol=0.1):
+    def __init__(self, kernel='rbf', C=1.0, gamma=1.0, tol=0.1):
         
         """
         Parameters:
