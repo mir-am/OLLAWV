@@ -8,7 +8,7 @@ extern "C" {
 //#include <string>
 
 // Kernel types
-enum {LINEAR, RBF}
+enum {LINEAR, RBF};
 
 
 struct SVMNode

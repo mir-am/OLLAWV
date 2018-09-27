@@ -7,6 +7,7 @@
 #include <numeric>
 #include <algorithm>
 #include <math.h>
+#include <cstring>
 #include "misc.h"
 //#include "FileReader.h"
 
@@ -22,7 +23,7 @@ static inline void swapVar(T& x, T& y)
 }
 
 template <typename S, typename T>
-static inline void cloneVar(T&* dst, S* src, int n)
+static inline void cloneVar(T*& dst, S* src, int n)
 {
     dst = new T[n];
     memcpy((void *) dst, (void *) src, sizeof(T) * n);
@@ -70,9 +71,8 @@ class QMatrix
         // Getting one column from Q matrix
         virtual Qfloat* get_Q(int column, int len) const = 0;
         virtual double* get_QD() const = 0;
-        virtual void swap_index(int i, j) const = 0;
+        virtual void swap_index(int i, int j) const = 0;
         virtual ~QMatrix() {}
-
 
 };
 
@@ -84,33 +84,33 @@ class Kernel: public QMatrix
 
 #ifdef _DENSE_REP
 
-        Kernel(int l, PREFIX(node) *x, const SVMParameter& param);
+        Kernel(int l, PREFIX(Node) *x, const SVMParameter& param);
 
 #else
 
-        Kernel(int l, PREFIX(node) * const *x, const SVMParameter& param);
+        Kernel(int l, PREFIX(Node) * const *x, const SVMParameter& param);
 
 #endif // _DENSE_REP
 
         virtual ~Kernel();
 
-        static double k_function(const PREFIX(node) *x, const PREFIX(node) *y,
+        static double k_function(const PREFIX(Node) *x, const PREFIX(Node) *y,
                                  const SVMParameter& param);
 
         virtual Qfloat* get_Q(int column, int len) const = 0;
         virtual double* get_QD() const = 0;
 
-        void swap_index(int i, int j)
+        void swap_index(int i, int j);
 
     private:
 
 #ifdef _DENSE_REP
 
-        PREFIX(node) *x;
+        PREFIX(Node) *x;
 
 #else
 
-        const PREFIX(node) **x;
+        const PREFIX(Node) **x;
 
 #endif // _DENSE_REP
 
@@ -120,11 +120,11 @@ class Kernel: public QMatrix
         int kernelType;
         const double gamma;
 
-        static double dot(const PREFIX(node) *px, const PREFIX(node) *py);
+        static double dot(const PREFIX(Node) *px, const PREFIX(Node) *py);
 
 #ifdef _DENSE_REP
 
-        static double dot(const PREFIX(node) &px, const PREFIX(node) &py);
+        static double dot(const PREFIX(Node) &px, const PREFIX(Node) &py);
 
 #endif
 
@@ -144,7 +144,7 @@ class Kernel: public QMatrix
 
 #ifdef _DENSE_REP
 
-        Kernel::Kernel(int l, PREFIX(node) *x_, const SVMParameter& param)
+        Kernel::Kernel(int l, PREFIX(Node) *x_, const SVMParameter& param)
 
 #else
 
@@ -243,6 +243,84 @@ double Kernel::dot(const PREFIX(node) *px, const PREFIX(node) *py)
 }
 
 #endif // _DENSE_REP
+
+double Kernel::k_function(const PREFIX(node) *x, const PREFIX(node) *y,
+                          const SVMParameter& param)
+{
+
+    switch(param.kernelType)
+    {
+        case LINEAR:
+
+            return dot(x, y);
+
+        case RBF:
+        {
+            double sum = 0;
+
+#ifdef _DENSE_REP
+
+            int dim = std::min(x->dim, y->dim), i;
+
+            for(i = 0; i < dim; ++i)
+            {
+                double d = x->values[i] - y->values[i];
+                sum += d * d;
+            }
+
+            for( ; i < x->dim; ++i)
+                sum += x->values[i] * x->values[i];
+
+            for( ; i < y->dim; ++i)
+                sum += y->values[i] * y->values[i];
+
+#else
+
+        while(x->index != -1 && y->index != -1)
+        {
+            if(x->index == y->index)
+            {
+                double d = x->value - y->value;
+                sum += d * d;
+                ++x;
+                ++y;
+            }
+            else
+            {
+                if(x->index > y->index)
+                {
+                    sum += y->value * y->value;
+                    ++y;
+                }
+                else
+                {
+                    sum += x->value * x->value;
+                    ++x;
+                }
+            }
+        }
+
+    while(x->index != -1)
+    {
+        sum += x->value * x->value;
+        ++x;
+    }
+
+    while(y->index != -1)
+    {
+        sum += y->value * y->value;
+        ++y;
+    }
+
+#endif // _DENSE_REP
+
+            return exp(-param.gamma * sum)
+
+        }
+
+    }
+}
+
 
 struct decisionFunction
 {
