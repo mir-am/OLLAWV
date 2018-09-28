@@ -30,6 +30,7 @@ static inline void cloneVar(T*& dst, S* src, int n)
 }
 
 typedef float Qfloat;
+typedef signed char schar;
 
 // Dense representation
 #ifdef _DENSE_REP
@@ -62,6 +63,39 @@ typedef float Qfloat;
 	namespace svm_csr {
 
 #endif
+
+
+// Kernel cache
+class Cache
+{
+
+    public:
+
+        Cache(int l, long int size);
+        ~Cache();
+
+        // Request data
+        int getData(const int index, Qfloat **data, int len);
+        void swapIndex(int i, int j);
+
+    private:
+
+        int l;
+        long int size;
+
+        struct head_t
+        {
+            head_t *prev, *next;
+            Qfloat *data;
+            int len;
+        };
+
+        head_t *head;
+        head_t lru_head;
+        void lru_delete(head_t *h);
+        void lru_insert(head_t *h);
+
+};
 
 
 class QMatrix
@@ -101,6 +135,10 @@ class Kernel: public QMatrix
         virtual double* get_QD() const = 0;
 
         void swap_index(int i, int j);
+
+    protected:
+
+        double (Kernel::*kernel_function)(int i, int j) const;
 
     private:
 
@@ -157,12 +195,12 @@ class Kernel: public QMatrix
     {
         case LINEAR:
 
-            k_function = &Kernel::kernelLinear;
+            kernel_function = &Kernel::kernelLinear;
             break;
 
         case RBF:
 
-            k_function = &Kernel::kernelRBF;
+            kernel_function = &Kernel::kernelRBF;
             break;
 
     }
@@ -174,7 +212,7 @@ class Kernel: public QMatrix
         x_square = new double[l];
 
         for(int i = 0; i < l; ++i)
-            x_square = dot(x[i], x[i]);
+            x_square[i] = dot(x[i], x[i]);
     }
     else
 
@@ -191,10 +229,10 @@ Kernel::~Kernel()
 
 #ifdef _DENSE_REP
 
-double Kernel::dot(const PREFIX(node) *px, const PREFIX(node) *py)
+double Kernel::dot(const PREFIX(Node) *px, const PREFIX(Node) *py)
 {
     double sum = 0;
-    int dim = min(py->dim, px->dim);
+    int dim = std::min(py->dim, px->dim);
 
     for(int i = 0; i < dim; ++i)
         sum += (px->values)[i] * (py->values)[i];
@@ -203,10 +241,10 @@ double Kernel::dot(const PREFIX(node) *px, const PREFIX(node) *py)
 
 }
 
-double Kernel::dot(const PREFIX(node) &px, const PREFIX(node) &py)
+double Kernel::dot(const PREFIX(Node) &px, const PREFIX(Node) &py)
 {
     double sum = 0;
-    int dim = min(py.dim, px.dim);
+    int dim = std::min(py.dim, px.dim);
 
     for(int i = 0; i < dim; ++i)
         sum += px.values[i] * py.values[i];
@@ -244,7 +282,7 @@ double Kernel::dot(const PREFIX(node) *px, const PREFIX(node) *py)
 
 #endif // _DENSE_REP
 
-double Kernel::k_function(const PREFIX(node) *x, const PREFIX(node) *y,
+double Kernel::k_function(const PREFIX(Node) *x, const PREFIX(Node) *y,
                           const SVMParameter& param)
 {
 
@@ -314,7 +352,7 @@ double Kernel::k_function(const PREFIX(node) *x, const PREFIX(node) *y,
 
 #endif // _DENSE_REP
 
-            return exp(-param.gamma * sum)
+            return exp(-param.gamma * sum);
 
         }
 
@@ -681,7 +719,7 @@ static decisionFunction trainOneSVM(const PREFIX(Problem) *prob, const SVMParame
 PREFIX(Model) *PREFIX(Train)(const PREFIX(Problem) *prob, const SVMParameter *param, int *status)
 {
 
-    //std::cout << "Training started... | C: " << param->C << " Gamma: " << param->gamma << std::endl;
+    std::cout << "Training started... | C: " << param->C << " Gamma: " << param->gamma << " Kernel: " << param->kernelType << std::endl;
 
     // Print elements - FOR DEBUGGING PURPOSE
     //printData(prob->x, prob->l);

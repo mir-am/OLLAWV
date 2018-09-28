@@ -48,6 +48,7 @@ def fit(np.ndarray[np.float64_t, ndim=2, mode='c'] X,
     cdef const char* errorMsg
     cdef np.npy_intp SV_len
     cdef np.npy_intp nr
+    cdef int index_kernel
     
     index_kernel = KERNEL_TYPES.index(kernel)
     setProblem(&prob, X.data, Y.data, X.shape)
@@ -56,7 +57,7 @@ def fit(np.ndarray[np.float64_t, ndim=2, mode='c'] X,
         
         raise MemoryError("Ran out of memory.")
         
-    setParameter(&param, gamma, C, tol)
+    setParameter(&param, index_kernel, gamma, C, tol)
     
     errorMsg = SVMCheckParameter(&param)
     
@@ -122,7 +123,7 @@ def predict(np.ndarray[np.float64_t, ndim=2, mode='c'] X,
             np.ndarray[np.int32_t, ndim=1, mode='c'] nSV,
             np.ndarray[np.float64_t, ndim=2, mode='c'] sv_coef,
             np.ndarray[np.float64_t, ndim=1, mode='c'] intercept,
-            double gamma=0.1):
+            kernel='rbf', double gamma=0.1):
     
     """
     Predicts target values of X given a model. (low-level methods)
@@ -146,10 +147,11 @@ def predict(np.ndarray[np.float64_t, ndim=2, mode='c'] X,
     cdef int rv
     
     # Training time-only parameters
+    cdef int kernel_index = KERNEL_TYPES.index(kernel)
     cdef double C = .0
     cdef double tol = .1
     
-    setParameter(&param, gamma, C, tol)
+    setParameter(&param, kernel_index, gamma, C, tol)
     
     model = setModel(&param, <int> nSV.shape[0], SV.data, SV.shape, support.data,
                      support.shape, sv_coef.strides, sv_coef.data, intercept.data,

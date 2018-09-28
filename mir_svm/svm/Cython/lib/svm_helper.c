@@ -44,8 +44,10 @@ struct SVMNode* denseToLIBSVM(double *x, npy_intp* dims)
 
 
 // Filling struct SVMParameter
-void setParameter(struct SVMParameter *param, double gamma, double C, double e)
+void setParameter(struct SVMParameter *param, int kernelType, double gamma,
+                  double C, double e)
 {
+    param->kernelType = kernelType;
     param->C = C;
     param->gamma = gamma;
     param->e = e;

@@ -38,7 +38,7 @@ cdef extern from "lib/svm_helper.c":
     
     # This file contains utility functions
     
-    void setParameter(SVMParameter*, double, double, double)
+    void setParameter(SVMParameter*, int, double, double, double)
     
     void setProblem(SVMProblem* , char*, char*, np.npy_intp *)
     

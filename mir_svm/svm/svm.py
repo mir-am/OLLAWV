@@ -124,7 +124,7 @@ class SVM(BaseEstimator, ClassifierMixin):
         
         self.support_, self.support_vectors_, self.n_support_, \
         self.dual_coef_, self.intercept_, self.fit_status_ = cy_wrap.fit(
-                X, y, self.C, self.gamma, self.tol)
+                X, y, self.kernel, self.C, self.gamma, self.tol)
         
         self.shape_fit_ = X.shape
         self.X_ = X
@@ -148,7 +148,8 @@ class SVM(BaseEstimator, ClassifierMixin):
         X_test = self._validate_for_predict(X_test)
         
         y = cy_wrap.predict(X_test, self.support_, self.support_vectors_,
-                        self.n_support_, self.dual_coef_, self.intercept_, self.gamma)
+                        self.n_support_, self.dual_coef_, self.intercept_,
+                        self.kernel, self.gamma)
         
         return self.classes_.take(np.asarray(y, dtype=np.intp))
         #return np.asarray(y, dtype=np.intp)
@@ -156,48 +157,48 @@ class SVM(BaseEstimator, ClassifierMixin):
 
 if __name__ == '__main__':
     
-    train_data, lables, file_name = read_data('../../dataset/pima-indian.csv')
+    train_data, lables, file_name = read_data('../dataset/pima-indian.csv')
     
-#    X_t, X_te, y_tr, y_te = train_test_split(train_data, lables, test_size=0.2,\
-#                                                    random_state=42)
+    X_t, X_te, y_tr, y_te = train_test_split(train_data, lables, test_size=0.2,\
+                                                    random_state=42)
     
     param = {'C': [float(2**i) for i in range(-5, 6)],
              'gamma': [float(2**i) for i in range(-10, 3)]}
     
     start_t = time.time()
     
-    model = SVM()
+    model = SVM(kernel='rbf', C=2, gamma=0.25)
     
     #scores = cross_val_score(model, train_data, lables, cv=5)
     
-    result = GridSearchCV(model, param, cv=5, n_jobs=4, refit=False, verbose=1)
-    result.fit(train_data, lables)
+    #result = GridSearchCV(model, param, cv=5, n_jobs=4, refit=False, verbose=1)
+    #result.fit(train_data, lables)
     
-    print(result.best_score_ * 100)
-    print(result.best_params_)
-    print(result.cv_results_['std_test_score'][result.best_index_] * 100)
+    #print(result.best_score_ * 100)
+    #print(result.best_params_)
+    #print(result.cv_results_['std_test_score'][result.best_index_] * 100)
     
     #print("Accuracy: %.2f" % (scores.mean() * 100))
     
-    #model.fit(X_t, y_tr)
+    model.fit(X_t, y_tr)
     
     #check_estimator(SVM)
     
     
-    #print("Training Finished in %.3f ms" % ((time.time() - start_t) * 1000))
+    print("Training Finished in %.3f ms" % ((time.time() - start_t) * 1000))
     
-    #t_test = time.time()
+    t_test = time.time()
     
-    #pred = model.predict(X_te)
+    pred = model.predict(X_te)
     
-    #print("Prediction Finished in %.3f ms" % ((time.time() - t_test) * 1000))
+    print("Prediction Finished in %.3f ms" % ((time.time() - t_test) * 1000))
 
     #pred_train = model.predict(X_t)
     
     #print("Targets: \n", y_te)
     #print("Predictions: \n", pred)
     
-    #print("Test Accuracy: %.2f" % (accuracy_score(y_te, pred) * 100))
+    print("Test Accuracy: %.2f" % (accuracy_score(y_te, pred) * 100))
     #print("Training Accuracy: %.2f" % (accuracy_score(y_tr, pred_train) * 100))
     
     print("Finished in %.3f ms" % ((time.time() - start_t) * 1000))
