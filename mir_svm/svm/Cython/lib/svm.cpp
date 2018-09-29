@@ -83,6 +83,7 @@ class Cache
         int l;
         long int size;
 
+        // Doubly circular linked list
         struct head_t
         {
             head_t *prev, *next;
@@ -96,6 +97,36 @@ class Cache
         void lru_insert(head_t *h);
 
 };
+
+
+Cache::Cache(int l_, long int size_)
+    :l(l_), size(size_)
+{
+    head = (head_t *) calloc(l, sizeof(head_t)); // initialized to zero.
+    size /= sizeof(Qfloat);
+    size -= l * sizeof(head_t) * / sizeof(Qfloat);
+    size = std::max(size, 2 * (long int) l);
+    lru_head.next = lru_head.prev = &lru_head;
+
+}
+
+
+Cache::~Cache()
+{
+    for(head_t *h = lru_head.next; h != &lru_head; h = h->next)
+        free(h->data);
+
+    free(head);
+}
+
+
+void Cache::lru_delete(head_t *h)
+{
+    // Delete from current location
+    h->prev->next = h->next;
+    h->next->prev = h->prev;
+
+}
 
 
 class QMatrix
