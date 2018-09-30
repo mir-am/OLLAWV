@@ -129,6 +129,49 @@ void Cache::lru_delete(head_t *h)
 }
 
 
+void Cache::lru_insert(head_t *h)
+{
+    // Insert to last posistion
+    h->next = &lru_head;
+    h->prev = lru_head.prev;
+    h->prev->next = h;
+    h->next->prev = h;
+}
+
+
+int Cache::getData(const int index, Qfloat **data, int len)
+{
+    head_t *h = &lru_head;
+    if(h->len) lru_delete(h);
+    int more = len - h->len;
+
+    if(more > 0)
+    {
+        // free old space
+        while(size < more)
+        {
+            head_t *old = lru_head.next;
+            lru_delete(old);
+            free(old->data);
+            size += old->len;
+            old->data = 0;
+            old->len = 0;
+        }
+
+        // Allocate new space
+        h->data = (Qfloat *) realloc(h->data, size(Qfloat) * len);
+        size -= more;
+        swap(h->len, len);
+
+    }
+
+    lru_insert(h);
+    *data = h->data;
+    return len;
+
+}
+
+
 class QMatrix
 {
     public:
