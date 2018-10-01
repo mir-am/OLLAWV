@@ -104,7 +104,7 @@ Cache::Cache(int l_, long int size_)
 {
     head = (head_t *) calloc(l, sizeof(head_t)); // initialized to zero.
     size /= sizeof(Qfloat);
-    size -= l * sizeof(head_t) * / sizeof(Qfloat);
+    size -= l * sizeof(head_t) / sizeof(Qfloat);
     size = std::max(size, 2 * (long int) l);
     lru_head.next = lru_head.prev = &lru_head;
 
@@ -141,7 +141,7 @@ void Cache::lru_insert(head_t *h)
 
 int Cache::getData(const int index, Qfloat **data, int len)
 {
-    head_t *h = &lru_head;
+    head_t *h = &head[index];
     if(h->len) lru_delete(h);
     int more = len - h->len;
 
@@ -159,15 +159,51 @@ int Cache::getData(const int index, Qfloat **data, int len)
         }
 
         // Allocate new space
-        h->data = (Qfloat *) realloc(h->data, size(Qfloat) * len);
+        h->data = (Qfloat *) realloc(h->data, sizeof(Qfloat) * len);
         size -= more;
-        swap(h->len, len);
+        swapVar(h->len, len);
 
     }
 
     lru_insert(h);
     *data = h->data;
     return len;
+
+}
+
+
+void Cache::swapIndex(int i, int j)
+{
+    if(i == j) return;
+
+    if(head[i].len) lru_delete(&head[i]);
+    if(head[j].len) lru_delete(&head[j]);
+
+    swapVar(head[i].data, head[j].data);
+    swapVar(head[i].len, head[j].len);
+
+    if(head[i].len) lru_insert(&head[i]);
+    if(head[j].len) lru_insert(&head[j]);
+
+    if(i > j) swapVar(i, j);
+    for(head_t *h = lru_head.next; h != &lru_head; h = h->next)
+    {
+        if(h->len > i)
+        {
+            if(h->len > j)
+                swapVar(h->data[i], h->data[j]);
+            else
+            {
+                lru_delete(h);
+                free(h->data);
+                size += h->len;
+                h->data = 0;
+                h->len = 0;
+            }
+        }
+
+    }
+
 
 }
 
@@ -432,6 +468,30 @@ double Kernel::k_function(const PREFIX(Node) *x, const PREFIX(Node) *y,
 
     }
 }
+
+
+class SVC_Q: public Kernel
+{
+
+    private:
+
+        schar *y;
+        Cache *cache;
+        double *QD;
+
+    public:
+
+        SVC_Q(const PREFIX(problem) &prob, const SVMParameter &param, const schar *y_)
+        :Kernel(prob.l, prob.x, param)
+        {
+            cloneVar(y, y_, prob.l);
+            cache = new Cache(prob.l, (long int)(param.cacheSize * (1 << 20)));
+            QD = new double[prob.l];
+            for(int i = 0; i < prob.l; ++i)
+                QD[i] = (this->*kernel_function)(i, i);
+        }
+
+};
 
 
 struct decisionFunction

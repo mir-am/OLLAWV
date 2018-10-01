@@ -34,6 +34,8 @@ struct SVMProblem
 struct SVMParameter
 {
     int kernelType;
+    double cacheSize; // in MB
+
     double C; // Penalty parameter
     double gamma; // Parameter of RBF function
     // a value between 0 and 1. For calculating stopping criteria
