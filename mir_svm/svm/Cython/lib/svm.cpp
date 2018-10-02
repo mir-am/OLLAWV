@@ -215,7 +215,7 @@ class QMatrix
         // Getting one column from Q matrix
         virtual Qfloat* get_Q(int column, int len) const = 0;
         virtual double* get_QD() const = 0;
-        virtual void swap_index(int i, int j) const = 0;
+        virtual void swapIndex(int i, int j) const = 0;
         virtual ~QMatrix() {}
 
 };
@@ -244,7 +244,11 @@ class Kernel: public QMatrix
         virtual Qfloat* get_Q(int column, int len) const = 0;
         virtual double* get_QD() const = 0;
 
-        void swap_index(int i, int j);
+        virtual void swapIndex(int i, int j) const
+        {
+            swapVar(x[i], x[j]);
+            if(x_square) swapVar(x_square[i], x_square[j]);
+        }
 
     protected:
 
@@ -424,41 +428,41 @@ double Kernel::k_function(const PREFIX(Node) *x, const PREFIX(Node) *y,
 
 #else
 
-        while(x->index != -1 && y->index != -1)
-        {
-            if(x->index == y->index)
+            while(x->index != -1 && y->index != -1)
             {
-                double d = x->value - y->value;
-                sum += d * d;
-                ++x;
-                ++y;
-            }
-            else
-            {
-                if(x->index > y->index)
+                if(x->index == y->index)
                 {
-                    sum += y->value * y->value;
+                    double d = x->value - y->value;
+                    sum += d * d;
+                    ++x;
                     ++y;
                 }
                 else
                 {
-                    sum += x->value * x->value;
-                    ++x;
+                    if(x->index > y->index)
+                    {
+                        sum += y->value * y->value;
+                        ++y;
+                    }
+                    else
+                    {
+                        sum += x->value * x->value;
+                        ++x;
+                    }
                 }
             }
-        }
 
-    while(x->index != -1)
-    {
-        sum += x->value * x->value;
-        ++x;
-    }
+            while(x->index != -1)
+            {
+                sum += x->value * x->value;
+                ++x;
+            }
 
-    while(y->index != -1)
-    {
-        sum += y->value * y->value;
-        ++y;
-    }
+            while(y->index != -1)
+            {
+                sum += y->value * y->value;
+                ++y;
+            }
 
 #endif // _DENSE_REP
 
@@ -481,7 +485,7 @@ class SVC_Q: public Kernel
 
     public:
 
-        SVC_Q(const PREFIX(problem) &prob, const SVMParameter &param, const schar *y_)
+        SVC_Q(const PREFIX(Problem) &prob, const SVMParameter &param, const schar *y_)
         :Kernel(prob.l, prob.x, param)
         {
             cloneVar(y, y_, prob.l);
@@ -489,6 +493,41 @@ class SVC_Q: public Kernel
             QD = new double[prob.l];
             for(int i = 0; i < prob.l; ++i)
                 QD[i] = (this->*kernel_function)(i, i);
+        }
+
+        Qfloat *get_Q(int i, int len) const
+        {
+            Qfloat *data;
+            int start, j;
+
+            if((start = cache->getData(i, &data, len)) < len)
+            {
+                for(j=start; j < len; ++j)
+                    data[j] = (Qfloat)(y[i] * y[j] * (this->*kernel_function)(i, j));
+            }
+
+            return data;
+
+        }
+
+        double *get_QD() const
+        {
+            return QD;
+        }
+
+        void swapIndex(int i, int j) const
+        {
+            cache->swapIndex(i, j);
+            Kernel::swapIndex(i, j);
+            swapVar(y[i], y[j]);
+            swapVar(QD[i], QD[j]);
+        }
+
+        ~SVC_Q()
+        {
+            delete[] y;
+            delete cache;
+            delete[] QD;
         }
 
 };
