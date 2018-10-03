@@ -33,29 +33,28 @@ std::vector<std::string> splitString(const std::string &str, char delim)
 }
 
 
-void FileReader::readDataFile(SVMProblem& prob)
+void FileReader::readDataFile(bool ignoreHeader=false)
 {
-    elements = 0;
-    prob.l = 0;
-
     std::ifstream file(fileName.c_str());
 
     if(file.is_open())
     {
-        std::cout << "Successfully read training datafile!" << std::endl;
         std::string line;
+
+        // Skip first line which is header names
+        if(ignoreHeader == true)
+        {
+            std::getline(file, line);
+        }
 
         while(std::getline(file, line))
         {
             // Tokenize
             trainingSet.push_back(splitString(line));
-
-            elements += trainingSet[prob.l].size();
-            ++prob.l;
         }
 
-        std::cout << "Samples: " << prob.l << std::endl;
-        std::cout << "Elements: " << elements << std::endl;
+        std::cout << "Read File Successfully." << std::endl;
+
 
         file.close();
     }
@@ -63,58 +62,94 @@ void FileReader::readDataFile(SVMProblem& prob)
     {
         std::cout << "Failed to open dataset " << fileName << std::endl;
 
-//        // strerror is NOT thread safe!
-//        std::cerr << "Error: " << strerror(errno);
+       exit(1);
+    }
+
+
+}
+
+//void FileReader::readDataFile(SVMProblem& prob)
+//{
+//    elements = 0;
+//    prob.l = 0;
 //
-//        char buffer[1000];
-//        char* answer = getcwd(buffer, sizeof(buffer));
-//        std::string s_cwd;
-//        if(answer)
+//    std::ifstream file(fileName.c_str());
+//
+//    if(file.is_open())
+//    {
+//        std::cout << "Successfully read training datafile!" << std::endl;
+//        std::string line;
+//
+//        while(std::getline(file, line))
 //        {
-//            s_cwd = answer;
-//            std::cout << s_cwd << std::endl;
+//            // Tokenize
+//            trainingSet.push_back(splitString(line));
+//
+//            elements += trainingSet[prob.l].size();
+//            ++prob.l;
 //        }
+//
+//        std::cout << "Samples: " << prob.l << std::endl;
+//        std::cout << "Elements: " << elements << std::endl;
+//
+//        file.close();
+//    }
+//    else
+//    {
+//        std::cout << "Failed to open dataset " << fileName << std::endl;
+//
+////        // strerror is NOT thread safe!
+////        std::cerr << "Error: " << strerror(errno);
+////
+////        char buffer[1000];
+////        char* answer = getcwd(buffer, sizeof(buffer));
+////        std::string s_cwd;
+////        if(answer)
+////        {
+////            s_cwd = answer;
+////            std::cout << s_cwd << std::endl;
+////        }
+//
+//
+//        exit(1);
+//    }
+//
+//}
 
 
-        exit(1);
-    }
-
-}
-
-
-void FileReader::readLIBSVM(SVMProblem& prob)
-{
-    size_t j = 0;
-
-    // Allocate memory for training samples
-    prob.y = new double[prob.l];
-    prob.x = new SVMNode*[prob.l];
-    SVMNode* xSpace = new SVMNode[elements];
-
-    for(int i = 0; i < prob.l; ++i)
-    {
-        prob.x[i] = &xSpace[j];
-        prob.y[i] = atof(trainingSet[i][0].c_str());
-
-        for(size_t n = 1; n < trainingSet[i].size(); ++n)
-        {
-            // Tokenize with : delimiter
-            std::vector<std::string> node = splitString(trainingSet[i][n], ':');
-
-            xSpace[j].index = atoi(node[0].c_str()); // index
-            xSpace[j].value = atof(node[1].c_str()); // Feature value
-
-            //std::cout << "(" << xSpace[j].index << "," << xSpace[j].value << ")" << " ";
-
-            ++j; // next Node
-
-        }
-
-        //std::cout << std::endl;
-        xSpace[j++].index = -1; // last node of i-th sample
-
-    }
-}
+//void FileReader::readLIBSVM(SVMProblem& prob)
+//{
+//    size_t j = 0;
+//
+//    // Allocate memory for training samples
+//    prob.y = new double[prob.l];
+//    prob.x = new SVMNode*[prob.l];
+//    SVMNode* xSpace = new SVMNode[elements];
+//
+//    for(int i = 0; i < prob.l; ++i)
+//    {
+//        prob.x[i] = &xSpace[j];
+//        prob.y[i] = atof(trainingSet[i][0].c_str());
+//
+//        for(size_t n = 1; n < trainingSet[i].size(); ++n)
+//        {
+//            // Tokenize with : delimiter
+//            std::vector<std::string> node = splitString(trainingSet[i][n], ':');
+//
+//            xSpace[j].index = atoi(node[0].c_str()); // index
+//            xSpace[j].value = atof(node[1].c_str()); // Feature value
+//
+//            //std::cout << "(" << xSpace[j].index << "," << xSpace[j].value << ")" << " ";
+//
+//            ++j; // next Node
+//
+//        }
+//
+//        //std::cout << std::endl;
+//        xSpace[j++].index = -1; // last node of i-th sample
+//
+//    }
+//}
 
 // Print CSV data
 //void FileReader::printData(SVMProblem& prob)

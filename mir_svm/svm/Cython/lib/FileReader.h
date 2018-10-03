@@ -28,9 +28,9 @@ class FileReader
         FileReader(std::string filename):
             fileName(filename) {}
 
-        void readDataFile(SVMProblem& prob);
+        void readDataFile(bool ignoreHeader);
 
-        void readLIBSVM(SVMProblem& prob);
+        //void readLIBSVM(SVMProblem& prob);
 
         // Only for debugging purpose
         //void printData(SVMProblem& prob);

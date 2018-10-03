@@ -1,0 +1,22 @@
+# depslib dependency file v1.0
+1538573192 source:/home/mir/Mir/mir-svm/mir_svm/svm/Cython/lib/main.cpp
+	<iostream>
+	"FileReader.h"
+
+1538572573 /home/mir/Mir/mir-svm/mir_svm/svm/Cython/lib/FileReader.h
+	<string>
+	<vector>
+	"svm.h"
+
+1538403653 /home/mir/Mir/mir-svm/mir_svm/svm/Cython/lib/svm.h
+
+1538572155 source:/home/mir/Mir/mir-svm/mir_svm/svm/Cython/lib/FileReader.cpp
+	"FileReader.h"
+	<iostream>
+	<sstream>
+	<fstream>
+	<string>
+	<cstring>
+	<stdlib.h>
+	<direct.h>
+
