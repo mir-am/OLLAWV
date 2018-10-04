@@ -11,7 +11,7 @@
 #include <direct.h>
 #endif
 
-std::vector<std::string> splitString(const std::string &str, char delim)
+std::vector<std::string> splitString(const std::string &str, char delim=',')
 {
     std::stringstream strStream(str);
     std::string item;
@@ -19,13 +19,8 @@ std::vector<std::string> splitString(const std::string &str, char delim)
 
     while(std::getline(strStream, item, delim))
     {
-
-        // Ignore white space in lines of dataset file
-        if(item.find_first_not_of(' ') != std::string::npos)
-        {
-            //std::cout << item << std::endl;
-            tokens.push_back(item);
-        }
+        //std::cout << item << std::endl;
+        tokens.push_back(item);
 
     }
 
@@ -65,6 +60,7 @@ void FileReader::readDataFile(bool ignoreHeader=false)
        exit(1);
     }
 
+<<<<<<< HEAD
 
 }
 
@@ -150,13 +146,132 @@ void FileReader::readDataFile(bool ignoreHeader=false)
 //
 //    }
 //}
+=======
 
-// Print CSV data
-//void FileReader::printData(SVMProblem& prob)
+}
+
+
+void FileReader::toLIBSVM(SVMProblem &prob)
+{
+    prob.l = trainingSet.size();
+    prob.x = new SVMNode[prob.l];
+    prob.y = new double[prob.l];
+
+    int cols = trainingSet[0].size() - 1;
+
+    for(int i = 0; i < prob.l; ++i)
+    {
+        prob.x[i].dim = cols;
+        prob.x[i].ind = i;
+        prob.x[i].values = new double[cols];
+        prob.y[i] = atof(trainingSet[i][0].c_str());
+
+        for(int j = 0; j < cols; ++j)
+            prob.x[i].values[j] = atof(trainingSet[i][j + 1].c_str());
+    }
+
+}
+
+
+
+//void FileReader::readDataFile(SVMProblem& prob)
 //{
+//    elements = 0;
+//    prob.l = 0;
 //
+//    std::ifstream file(fileName.c_str());
+//
+//    if(file.is_open())
+//    {
+//        std::cout << "Successfully read training datafile!" << std::endl;
+//        std::string line;
+//
+//        while(std::getline(file, line))
+//        {
+//            // Tokenize
+//            trainingSet.push_back(splitString(line));
+//
+//            elements += trainingSet[prob.l].size();
+//            ++prob.l;
+//        }
+//
+//        std::cout << "Samples: " << prob.l << std::endl;
+//        std::cout << "Elements: " << elements << std::endl;
+//
+//        file.close();
+//    }
+//    else
+//    {
+//        std::cout << "Failed to open dataset " << fileName << std::endl;
+//
+////        // strerror is NOT thread safe!
+////        std::cerr << "Error: " << strerror(errno);
+////
+////        char buffer[1000];
+////        char* answer = getcwd(buffer, sizeof(buffer));
+////        std::string s_cwd;
+////        if(answer)
+////        {
+////            s_cwd = answer;
+////            std::cout << s_cwd << std::endl;
+////        }
+//
+//
+//        exit(1);
+//    }
 //
 //}
+
+>>>>>>> Converting CSV files to dense LIBSVM format.
+
+//void FileReader::readLIBSVM(SVMProblem& prob)
+//{
+//    size_t j = 0;
+//
+//    // Allocate memory for training samples
+//    prob.y = new double[prob.l];
+//    prob.x = new SVMNode*[prob.l];
+//    SVMNode* xSpace = new SVMNode[elements];
+//
+//    for(int i = 0; i < prob.l; ++i)
+//    {
+//        prob.x[i] = &xSpace[j];
+//        prob.y[i] = atof(trainingSet[i][0].c_str());
+//
+//        for(size_t n = 1; n < trainingSet[i].size(); ++n)
+//        {
+//            // Tokenize with : delimiter
+//            std::vector<std::string> node = splitString(trainingSet[i][n], ':');
+//
+//            xSpace[j].index = atoi(node[0].c_str()); // index
+//            xSpace[j].value = atof(node[1].c_str()); // Feature value
+//
+//            //std::cout << "(" << xSpace[j].index << "," << xSpace[j].value << ")" << " ";
+//
+//            ++j; // next Node
+//
+//        }
+//
+//        //std::cout << std::endl;
+//        xSpace[j++].index = -1; // last node of i-th sample
+//
+//    }
+//}
+
+// Print CSV data
+void FileReader::printData(SVMProblem& prob)
+{
+    for(int i = 0; i < prob.l; ++i)
+    {
+        std::cout << prob.y[i] << " ";
+
+        for(int j = 0; j < prob.x[i].dim; ++j)
+            std::cout << prob.x[i].values[j] << " ";
+
+         std::cout << std::endl;
+    }
+
+}
 
 //stdvecvec FileReader::convertVecD()
 //{

@@ -8,7 +8,7 @@
 typedef std::vector<std::vector<double> > stdvecvec;
 typedef std::vector<double> stdvec;
 
-std::vector<std::string> splitString(const std::string &str, char delim=' ');
+std::vector<std::string> splitString(const std::string &str, char delim);
 
 class FileReader
 {
@@ -30,10 +30,15 @@ class FileReader
 
         void readDataFile(bool ignoreHeader);
 
+<<<<<<< HEAD
+=======
+        void toLIBSVM(SVMProblem &prob);
+
+>>>>>>> Converting CSV files to dense LIBSVM format.
         //void readLIBSVM(SVMProblem& prob);
 
         // Only for debugging purpose
-        //void printData(SVMProblem& prob);
+        void printData(SVMProblem& prob);
 
         // Function to fetch data from CSV file
         //void getData(bool ignoreheader=false);

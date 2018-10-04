@@ -20,3 +20,44 @@
 	<stdlib.h>
 	<direct.h>
 
+<<<<<<< HEAD
+=======
+1538670950 source:/home/mir/mir-projects/mir-svm/mir_svm/svm/Cython/lib/main.cpp
+	<iostream>
+	"FileReader.h"
+	"svm.h"
+
+1538671093 /home/mir/mir-projects/mir-svm/mir_svm/svm/Cython/lib/FileReader.h
+	<string>
+	<vector>
+	"svm.h"
+
+1538503094 /home/mir/mir-projects/mir-svm/mir_svm/svm/Cython/lib/svm.h
+
+1538670907 source:/home/mir/mir-projects/mir-svm/mir_svm/svm/Cython/lib/FileReader.cpp
+	"FileReader.h"
+	<iostream>
+	<sstream>
+	<fstream>
+	<string>
+	<cstring>
+	<stdlib.h>
+	<direct.h>
+
+1538668033 source:/home/mir/mir-projects/mir-svm/mir_svm/svm/Cython/lib/svm.cpp
+	"svm.h"
+	<cstddef>
+	<stdlib.h>
+	<iostream>
+	<fstream>
+	<vector>
+	<numeric>
+	<algorithm>
+	<math.h>
+	<cstring>
+	"misc.h"
+
+1537454255 /home/mir/mir-projects/mir-svm/mir_svm/svm/Cython/lib/misc.h
+	"svm.h"
+
+>>>>>>> Converting CSV files to dense LIBSVM format.

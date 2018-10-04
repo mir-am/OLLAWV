@@ -12,6 +12,10 @@
 				<Option type="1" />
 				<Option compiler="gcc" />
 				<Compiler>
+<<<<<<< HEAD
+=======
+					<Add option="-std=c++11" />
+>>>>>>> Converting CSV files to dense LIBSVM format.
 					<Add option="-g" />
 				</Compiler>
 			</Target>
@@ -32,7 +36,15 @@
 			<Add option="-Wall" />
 			<Add option="-fexceptions" />
 		</Compiler>
+<<<<<<< HEAD
 		<Unit filename="main.cpp" />
+=======
+		<Unit filename="FileReader.cpp" />
+		<Unit filename="FileReader.h" />
+		<Unit filename="main.cpp" />
+		<Unit filename="svm.cpp" />
+		<Unit filename="svm.h" />
+>>>>>>> Converting CSV files to dense LIBSVM format.
 		<Extensions>
 			<code_completion />
 			<debugger />

@@ -32,6 +32,7 @@ static inline void cloneVar(T*& dst, S* src, int n)
 typedef float Qfloat;
 typedef signed char schar;
 
+#define _DENSE_REP
 // Dense representation
 #ifdef _DENSE_REP
 
